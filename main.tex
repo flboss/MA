@@ -1,0 +1,81 @@
+\documentclass[12pt]{article}
+
+\usepackage{fontspec}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=2cm]{geometry}
+\usepackage{parskip}
+\usepackage[style=ddmmyyyy,datesep=.]{datetime2}
+
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{listings}
+% \usepackage{tikz}
+% \usepackage{amsmath}
+
+\usepackage{todonotes}
+\usepackage[backend=biber,citestyle=verbose-ibid]{biblatex}
+
+\usepackage[colorlinks=true,allcolors=black]{hyperref}
+
+
+\input{config/fonts}
+\input{config/listings}
+\addbibresource{main.bib}
+\graphicspath{{images/}}
+
+
+\begin{document}
+
+\begin{titlepage}
+
+	\begin{center}
+		\huge grove
+
+		\large \today
+	\end{center}
+
+\end{titlepage}
+
+\clearpage
+
+\tableofcontents
+
+\clearpage
+
+\input{content/introduction}
+
+\clearpage
+
+\input{content/foundations}
+
+\clearpage
+
+\input{content/design}
+
+\clearpage
+
+\input{content/implementation}
+
+\clearpage
+
+\input{content/evaluation}
+
+\clearpage
+
+\input{content/conclusion}
+
+\clearpage
+
+\section{References}
+
+\printbibliography
+
+% \clearpage
+%
+% \section{List of Figures}
+% \listoffigures
+
+\end{document}
