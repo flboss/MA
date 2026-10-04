@@ -4,6 +4,114 @@
 
 \subsection{The relational model}
 
+The relational model, introduced by Edgar F. Codd in 1970\autocite{codd1970},
+organises data as relations: unordered sets of tuples with a fixed number of named attributes.
+It is the data model behind most widely used database systems today.
+Each relation is conventionally shown as a table, in which each row corresponds to one tuple and each column to one attribute.
+The schema of a relation defines its structure: the relation name and, for each column, its name and value domain.
+The data itself is the current set of rows.
+Row order is not part of the model: two tables holding the same rows in a different order contain the same data.
+
+Rows are identified and connected through keys.
+A primary key is a column, or a minimal combination of columns, whose values uniquely identify each row of a table,
+such as \texttt{users.id} in Table~\ref{tab:users}.
+A foreign key is a column holding values that refer to the primary key of another table,
+such as \texttt{orders.user\_id} in Table~\ref{tab:orders}, which refers to \texttt{users.id}.
+Keys therefore express relationships between tables without containing any hierarchy:
+the tables remain flat, and the connection exists only as matching values.
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|l|l|}
+		\hline
+		\texttt{id} & \texttt{name} & \texttt{email}    \\
+		\hline
+		1           & Alice         & alice@example.com \\
+		2           & Bob           & bob@example.com   \\
+		\hline
+	\end{tabular}
+	\caption{Example table \texttt{users}.}
+	\label{tab:users}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\texttt{id} & \texttt{user\_id} & \texttt{total} \\
+		\hline
+		1           & 1                 & 42.00          \\
+		2           & 1                 & 99.50          \\
+		3           & 2                 & 7.00           \\
+		\hline
+	\end{tabular}
+	\caption{Example table \texttt{orders}, with \texttt{user\_id} as a foreign key into \texttt{users}.}
+	\label{tab:orders}
+\end{table}
+
+The shape of such a relationship is described by its cardinality
+(Figure~\ref{fig:cardinalities}).
+In a one-to-many relationship, each row on one side relates to any number of rows on the other, but not vice versa:
+each order in Table~\ref{tab:orders} belongs to exactly one user,
+while each user in Table~\ref{tab:users} can have many orders.
+In a one-to-one relationship, each row relates to at most one row on the other side,
+enforced by a uniqueness constraint on the foreign key.
+In a many-to-many relationship, any number of rows on each side can relate to each other:
+each user can hold many roles, and each role can be held by many users.
+Since a single foreign key column can only point at one row,
+many-to-many relationships require an additional join table holding one foreign key per side,
+as in Table~\ref{tab:user-roles}.
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|l|}
+		\hline
+		\texttt{id} & \texttt{name} \\
+		\hline
+		1           & admin         \\
+		2           & editor        \\
+		\hline
+	\end{tabular}
+	\caption{Example table \texttt{roles}.}
+	\label{tab:roles}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		\texttt{user\_id} & \texttt{role\_id} \\
+		\hline
+		1                 & 1                 \\
+		1                 & 2                 \\
+		2                 & 2                 \\
+		\hline
+	\end{tabular}
+	\caption{Example join table \texttt{user\_roles}, with foreign keys into \texttt{users} and \texttt{roles}.}
+	\label{tab:user-roles}
+\end{table}
+
+\begin{figure}[H]
+	\centering
+	\input{figures/rel_cardinalities.tikz}
+	\caption{Table relationships by cardinality. Foreign key relations are indicated by arrows.}
+	\label{fig:cardinalities}
+\end{figure}
+
+Tables are combined by comparing foreign keys with the primary keys they refer to.
+A join of \texttt{orders} and \texttt{users} pairs each order row with the user row
+whose \texttt{id} equals its \texttt{user\_id} (Figure~\ref{fig:join}),
+so queries can use columns from both tables at once.
+Join tables are used the same way, through two such comparisons:
+\texttt{user\_roles} joined with \texttt{users} on one side and with \texttt{roles} on the other.
+
+\begin{figure}[H]
+	\centering
+	\input{figures/rel_join.tikz}
+	\caption{Row-by-row view of the join between \texttt{orders} and \texttt{users}.}
+	\label{fig:join}
+\end{figure}
+
 \subsection{Relational queries in SQL}
 
 \subsection{Hierarchical and graph data models}

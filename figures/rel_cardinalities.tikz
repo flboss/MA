@@ -1,0 +1,47 @@
+\begin{tikzpicture}[
+		tabhead/.style={draw=black!70, fill=white, minimum width=3.4cm, minimum height=0.62cm, inner sep=3pt, outer sep=0, font=\ttfamily\small\bfseries, align=left},
+		tabrow/.style={draw=black!70, fill=white, minimum width=3.4cm, minimum height=0.55cm, inner sep=3pt, outer sep=0, font=\ttfamily\small, align=left},
+		narrowhead/.style={tabhead, minimum width=2.8cm},
+		narrowrow/.style={tabrow, minimum width=2.8cm},
+		panellab/.style={font=\bfseries\small},
+		cardlab/.style={font=\footnotesize, text=black},
+	]
+	% 1:N
+	\node[panellab] at (-7.1, -0.9) {(a)};
+	\node[tabhead] (uah) at (-4.4, 0) {users};
+	\node[tabrow, below=-\pgflinewidth of uah] (ua_id) {\textcolor{cyan700}{id}~{\scriptsize\textcolor{cyan700}{PK}}};
+	\node[tabrow, below=-\pgflinewidth of ua_id] (ua_n) {name};
+	\node[tabhead] (oah) at (1.0, 0) {orders};
+	\node[tabrow, below=-\pgflinewidth of oah] (oa_id) {\textcolor{cyan700}{id}~{\scriptsize\textcolor{cyan700}{PK}}};
+	\node[tabrow, below=-\pgflinewidth of oa_id] (oa_fk) {\textcolor{yellow700}{user\_id}~{\scriptsize\textcolor{yellow700}{FK}}};
+	\node[tabrow, below=-\pgflinewidth of oa_fk] (oa_t) {total};
+	\draw[yellow700, thick, -{Stealth}] (oa_fk.west) -- (ua_id.east);
+	\draw[teal700, densely dotted, thick] (ua_n.south west) to[bend right=10] node[below, cardlab] {1:N} (oa_t.south east);
+
+	% 1:1
+	\node[panellab] at (-7.1, -4.3) {(b)};
+	\node[tabhead] (ubh) at (-4.4, -3.4) {users};
+	\node[tabrow, below=-\pgflinewidth of ubh] (ub_id) {\textcolor{cyan700}{id}~{\scriptsize\textcolor{cyan700}{PK}}};
+	\node[tabrow, below=-\pgflinewidth of ub_id] (ub_n) {name};
+	\node[tabhead] (pbh) at (1.0, -3.4) {profiles};
+	\node[tabrow, below=-\pgflinewidth of pbh] (pb_id) {\textcolor{cyan700}{id}~{\scriptsize\textcolor{cyan700}{PK}}};
+	\node[tabrow, below=-\pgflinewidth of pb_id] (pb_fk) {\textcolor{yellow700}{user\_id}~{\scriptsize\textcolor{yellow700}{FK, unique}}};
+	\node[tabrow, below=-\pgflinewidth of pb_fk] (pb_avatar) {avatar};
+	\draw[yellow700, thick, -{Stealth}] (pb_fk.west) -- (ub_id.east);
+	\draw[teal700, densely dotted, thick] (ub_n.south west) to[bend right=10] node[below, cardlab] {1:1} (pb_avatar.south east);
+
+	% N:M
+	\node[panellab] at (-7.1, -6.9) {(c)};
+	\node[narrowhead] (uch) at (-5.2, -6.6) {users};
+	\node[narrowrow, below=-\pgflinewidth of uch] (uc_id) {\textcolor{cyan700}{id}~{\scriptsize\textcolor{cyan700}{PK}}};
+	\node[narrowrow, below=-\pgflinewidth of uc_id] (uc_n) {name};
+	\node[tabhead] (urh) at (-0.9, -6.6) {user\_roles};
+	\node[tabrow, below=-\pgflinewidth of urh] (ur_u) {\textcolor{yellow700}{user\_id}~{\scriptsize\textcolor{yellow700}{FK}}};
+	\node[tabrow, below=-\pgflinewidth of ur_u] (ur_r) {\textcolor{yellow700}{role\_id}~{\scriptsize\textcolor{yellow700}{FK}}};
+	\node[narrowhead] (rch) at (3.4, -6.6) {roles};
+	\node[narrowrow, below=-\pgflinewidth of rch] (rc_id) {\textcolor{cyan700}{id}~{\scriptsize\textcolor{cyan700}{PK}}};
+	\node[narrowrow, below=-\pgflinewidth of rc_id] (rc_n) {name};
+	\draw[yellow700, thick, -{Stealth}] (ur_u.west) -- (uc_id.east);
+	\draw[yellow700, thick, -{Stealth}] (ur_r.east) -- (rc_id.west);
+	\draw[teal700, densely dotted, thick] (uc_n.south west) to[bend right=12] node[below, cardlab] {N:M} (rc_n.south east);
+\end{tikzpicture}
