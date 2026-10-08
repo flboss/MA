@@ -1,0 +1,257 @@
+% !TeX root = ../../main.tex
+
+\subsection{Relational queries in SQL}
+\label{sec:sql}
+
+SQL is the standard language for working with relational databases.
+It is declarative: a statement describes the desired result,
+and the database system decides how to compute it.
+Most statements read data, a smaller set changes it.
+This section follows a query from its individual clauses to the ways queries compose,
+using the tables from Section~\ref{sec:relational-model}.
+
+\subsubsection{The shape of a query}
+
+The core of a query has three clauses:
+
+\begin{lstlisting}[style=sql]
+SELECT name, email AS email_address
+FROM users
+WHERE name = 'Bob';
+\end{lstlisting}
+
+\texttt{FROM} chooses the source rows,
+\texttt{WHERE} keeps only the rows matching its condition,
+and \texttt{SELECT} chooses the output columns.
+Conditions compare columns with literals or other columns
+(\texttt{=}, \texttt{<>}, \texttt{<}, \texttt{>}, \texttt{<=}, \texttt{>=})
+and combine with \texttt{AND}, \texttt{OR} and \texttt{NOT}.
+Although \texttt{SELECT} is written first, it is evaluated after \texttt{WHERE}:
+filtering happens before projection, so a \texttt{WHERE} clause
+cannot refer to an alias defined in \texttt{SELECT}.
+\texttt{SELECT} may also compute output columns from expressions,
+rename them with \texttt{AS}, and \texttt{SELECT *} keeps all columns.
+
+\subsubsection{Sorting and limiting results}
+
+\texttt{ORDER BY} sorts the result rows by one or more expressions,
+each ascending (\texttt{ASC}, the default) or descending (\texttt{DESC});
+multiple keys apply left to right:
+
+\begin{lstlisting}[style=sql]
+SELECT id, total
+FROM orders
+ORDER BY total DESC, id ASC
+LIMIT 2;
+\end{lstlisting}
+
+\texttt{LIMIT n} keeps only the first \texttt{n} rows,
+and \texttt{OFFSET n} skips the first \texttt{n} rows, together they express pagination.
+Rows that compare equal on all sort keys keep an unspecified relative order,
+so reproducible paging needs a unique key, typically the primary key, as the last sort key.
+
+\subsubsection{Joining tables}
+
+\texttt{JOIN} pairs rows from two tables according to a condition in \texttt{ON},
+usually a foreign key compared with the primary key it refers to:
+
+\begin{lstlisting}[style=sql]
+SELECT orders.id, orders.total, users.name
+FROM orders
+JOIN users ON orders.user_id = users.id;
+\end{lstlisting}
+
+A plain \texttt{JOIN} is an inner join: pairs that match nothing are dropped,
+so the result holds one row per order, each extended with its user's name.
+Joins chain left to right, which is how join tables are read:
+\texttt{users} joined with \texttt{user\_roles} and then with \texttt{roles}
+yields one flat row per membership:
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|l|}
+		\hline
+		user  & role   \\
+		\hline
+		Alice & admin  \\
+		Alice & editor \\
+		Bob   & editor \\
+		\hline
+	\end{tabular}
+	\caption{Joining \texttt{users} through \texttt{user\_roles} to \texttt{roles}.}
+	\label{tab:memberships}
+\end{table}
+
+Besides the inner join, outer joins keep rows that match nothing:
+a \texttt{LEFT JOIN} keeps every row of the left table,
+a \texttt{RIGHT JOIN} every row of the right table,
+and a \texttt{FULL JOIN} both sides,
+filling missing columns with \texttt{NULL}.
+Tables can also be joined with themselves when a foreign key points into its own table,
+for example a \texttt{manager\_id} column referring to \texttt{users.id}.
+Each occurrence then needs a distinct alias with \texttt{AS} to tell the two roles apart:
+
+\begin{lstlisting}[style=sql]
+SELECT employee.name, manager.name AS manager
+FROM users AS employee
+JOIN users AS manager ON employee.manager_id = manager.id;
+\end{lstlisting}
+
+\subsubsection{Missing values}
+
+\texttt{NULL} marks a value as absent or unknown.
+It is not a value but the absence of one: \texttt{0}, the empty string and false
+are ordinary values of their respective types,
+whereas \texttt{NULL} is distinct from every value of every type.
+Unknown values propagate: any comparison or arithmetic involving \texttt{NULL}
+yields \texttt{UNKNOWN} or \texttt{NULL} rather than a concrete value,
+for example \texttt{NULL = 1} is \texttt{UNKNOWN} and \texttt{1 + NULL} is \texttt{NULL}.
+\texttt{UNKNOWN} is a third truth value besides \texttt{TRUE} and \texttt{FALSE},
+and \texttt{WHERE} keeps only rows whose condition is \texttt{TRUE}.
+The ordinary comparison operators therefore cannot detect absence at all,
+which is why \texttt{NULL} has dedicated ones: \texttt{IS NULL} and \texttt{IS NOT NULL}.
+
+\begin{lstlisting}[style=sql]
+SELECT name FROM users WHERE email IS NULL;
+SELECT name FROM users WHERE email IS NOT NULL;
+\end{lstlisting}
+
+The same idea governs aggregation: aggregate functions combine the known inputs
+and have nothing to say about unknown ones, so they skip \texttt{NULL} values.
+\texttt{COUNT(*)} counts rows and therefore never skips anything, while
+\texttt{COUNT(column)} counts only the known values.
+Where there is nothing to combine, the result is itself unknown:
+\texttt{SUM} and \texttt{AVG} over an empty set of rows return \texttt{NULL}, not zero.
+
+\subsubsection{Aggregation}
+
+The functions \texttt{COUNT}, \texttt{SUM}, \texttt{AVG}, \texttt{MIN} and \texttt{MAX}
+collapse a set of rows into a single value.
+Without further clauses the whole result becomes one row; with \texttt{GROUP BY},
+rows sharing the same values are aggregated separately, yielding one result row per group:
+
+\begin{lstlisting}[style=sql]
+SELECT user_id, COUNT(*) AS order_count, SUM(total) AS total_spent
+FROM orders
+GROUP BY user_id;
+\end{lstlisting}
+
+This returns one row per user:
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\texttt{user\_id} & \texttt{order\_count} & \texttt{total\_spent} \\
+		\hline
+		1                 & 2                     & 141.50                \\
+		2                 & 1                     & 7.00                  \\
+		\hline
+	\end{tabular}
+	\caption{Orders aggregated per user.}
+	\label{tab:order-totals}
+\end{table}
+
+\texttt{HAVING} filters groups after aggregation,
+mirroring how \texttt{WHERE} filters rows before it,
+for example \texttt{HAVING COUNT(*) > 1} keeps only users with more than one order.
+
+\subsubsection{Subqueries}
+
+A query can appear inside another query wherever a value, a list or a table is expected.
+A scalar subquery in \texttt{SELECT} computes one value per result row:
+
+\begin{lstlisting}[style=sql]
+SELECT name,
+       (SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) AS order_count
+FROM users;
+\end{lstlisting}
+
+This returns the name and number of orders for each user.
+Because the inner query refers to the outer row (\texttt{users.id}),
+it is correlated: it is evaluated once per outer row.
+An uncorrelated subquery is independent of the outer query and runs only once,
+for example a list of values on the right of \texttt{IN}:
+
+\begin{lstlisting}[style=sql]
+SELECT name FROM users
+WHERE id IN (SELECT user_id FROM user_roles WHERE role_id = 1);
+\end{lstlisting}
+A subquery in \texttt{FROM} acts as a derived table and must carry an alias:
+
+\begin{lstlisting}[style=sql]
+SELECT * FROM (SELECT * FROM users WHERE name <> 'Bob') AS filtered;
+\end{lstlisting}
+
+\subsubsection{Row-level computation}
+
+\texttt{CASE} chooses a value per row from a chain of conditions:
+
+\begin{lstlisting}[style=sql]
+SELECT id, total,
+       CASE WHEN total >= 100 THEN 'large'
+            WHEN total >= 10 THEN 'medium'
+            ELSE 'small' END AS size
+FROM orders;
+\end{lstlisting}
+
+Scalar functions compute new columns from existing ones:
+\texttt{LENGTH(s)} counts characters, \texttt{UPPER(s)} and \texttt{LOWER(s)} change case,
+and \texttt{CAST(x AS TEXT)} converts between types.
+\texttt{COALESCE(a, b, ...)} returns its first non-\texttt{NULL} argument and
+expresses defaults directly in a query:
+
+\begin{lstlisting}[style=sql]
+SELECT users.name, COALESCE(profiles.bio, 'no bio') AS bio
+FROM users
+LEFT JOIN profiles ON profiles.user_id = users.id;
+\end{lstlisting}
+
+\subsubsection{Numbering rows within groups}
+
+Window functions compute over a group of related rows without collapsing them.
+\texttt{ROW\_NUMBER() OVER (PARTITION BY ... ORDER BY ...)} numbers the rows of
+each partition separately:
+
+\begin{lstlisting}[style=sql]
+SELECT id, user_id, total,
+       ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total DESC) AS rn
+FROM orders;
+\end{lstlisting}
+
+Alice's orders are numbered 1 (99.50) and 2 (42.00), Bob's single order is number 1:
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\texttt{id} & \texttt{user\_id} & \texttt{total} & \texttt{rn} \\
+		\hline
+		1           & 1                 & 42.00          & 2           \\
+		2           & 1                 & 99.50          & 1           \\
+		3           & 2                 & 7.00           & 1           \\
+		\hline
+	\end{tabular}
+	\caption{Orders numbered per user by descending total. The output order itself is unspecified without \texttt{ORDER BY}.}
+	\label{tab:row-number}
+\end{table}
+
+With an empty \texttt{OVER ()} clause the whole result forms one group.
+Filtering on the computed number, for example \texttt{rn <= 5},
+keeps the first rows of each group rather than of the whole result.
+
+\subsubsection{Changing data}
+
+\texttt{INSERT} adds rows, \texttt{UPDATE} rewrites columns of the rows matching
+its \texttt{WHERE} clause, and \texttt{DELETE} removes them:
+
+\begin{lstlisting}[style=sql]
+INSERT INTO users (name, email) VALUES ('Carol', 'carol@example.com');
+UPDATE users SET email = 'bob-new@example.com' WHERE name = 'Bob';
+DELETE FROM users WHERE name = 'Carol';
+\end{lstlisting}
+
+Omitting \texttt{WHERE} in \texttt{UPDATE} or \texttt{DELETE} affects every row.
+Data-modification statements between \texttt{BEGIN} and \texttt{COMMIT} form a transaction,
+meaning either all of them take effect or,
+if any fails and the transaction is rolled back with \texttt{ROLLBACK}, none does.

@@ -26,9 +26,9 @@
 	\node[tabhead] (pbh) at (1.0, -3.4) {profiles};
 	\node[tabrow, below=-\pgflinewidth of pbh] (pb_id) {\textcolor{cyan700}{id}~{\scriptsize\textcolor{cyan700}{PK}}};
 	\node[tabrow, below=-\pgflinewidth of pb_id] (pb_fk) {\textcolor{yellow700}{user\_id}~{\scriptsize\textcolor{yellow700}{FK, unique}}};
-	\node[tabrow, below=-\pgflinewidth of pb_fk] (pb_avatar) {avatar};
+	\node[tabrow, below=-\pgflinewidth of pb_fk] (pb_bio) {bio};
 	\draw[yellow700, thick, -{Stealth}] (pb_fk.west) -- (ub_id.east);
-	\draw[teal700, densely dotted, thick] (ub_n.south west) to[bend right=10] node[below, cardlab] {1:1} (pb_avatar.south east);
+	\draw[teal700, densely dotted, thick] (ub_n.south west) to[bend right=10] node[below, cardlab] {1:1} (pb_bio.south east);
 
 	% N:M
 	\node[panellab] at (-7.1, -6.9) {(c)};
