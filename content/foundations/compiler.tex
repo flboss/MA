@@ -53,7 +53,9 @@ such as parentheses and commas, and keeps only the nesting:
 \end{figure}
 
 The tree shape is what makes precedence and associativity concrete:
-multiplication binds tighter than addition exactly when the parser nests it deeper.
+multiplication binds tighter than addition exactly when the parser nests it deeper,
+and a repeated operator groups in a fixed direction,
+e.g.\ \texttt{a - b - c} as \texttt{(a - b) - c} (left-associative).
 A token that fits no rule at its position is a syntax error,
 and instead of stopping at the first one,
 parsers typically skip ahead to a synchronization point,
@@ -66,7 +68,9 @@ it may name things that do not exist or combine values in ways that make no sens
 Semantic analysis checks meaning in two main parts.
 Name resolution connects each identifier to the declaration it refers to,
 following scoping rules: names live in scopes, scopes nest,
-and an inner scope may shadow an outer one. % TODO: footnote
+and an inner scope may shadow an outer one.\footnote{Shadowing means an inner
+	declaration hides an outer declaration of the same name:
+	within the inner scope, the name refers to the inner declaration.}
 Type checking then verifies that every construct is applied to
 values of suitable types, following one rule per construct:
 a comparison yields a boolean, arithmetic on numbers yields a number, and so on.

@@ -27,8 +27,8 @@ Conditions compare columns with literals or other columns
 (\texttt{=}, \texttt{<>}, \texttt{<}, \texttt{>}, \texttt{<=}, \texttt{>=})
 and combine with \texttt{AND}, \texttt{OR} and \texttt{NOT}.
 Although \texttt{SELECT} is written first, it is evaluated after \texttt{WHERE}:
-filtering happens before projection, so a \texttt{WHERE} clause
-cannot refer to an alias defined in \texttt{SELECT}.
+filtering happens before projection (the choosing of output columns),
+so a \texttt{WHERE} clause cannot refer to an alias defined in \texttt{SELECT}.
 \texttt{SELECT} may also compute output columns from expressions,
 rename them with \texttt{AS}, and \texttt{SELECT *} keeps all columns.
 
@@ -209,7 +209,8 @@ LEFT JOIN profiles ON profiles.user_id = users.id;
 
 \subsubsection{Numbering rows within groups}
 
-Window functions compute over a group of related rows without collapsing them.
+Window functions compute over a group of related rows,
+called a partition, without collapsing them.
 \texttt{ROW\_NUMBER() OVER (PARTITION BY ... ORDER BY ...)} numbers the rows of
 each partition separately:
 
@@ -255,3 +256,4 @@ Omitting \texttt{WHERE} in \texttt{UPDATE} or \texttt{DELETE} affects every row.
 Data-modification statements between \texttt{BEGIN} and \texttt{COMMIT} form a transaction,
 meaning either all of them take effect or,
 if any fails and the transaction is rolled back with \texttt{ROLLBACK}, none does.
+This all-or-nothing property is called atomicity.
