@@ -1,0 +1,25 @@
+\begin{tikzpicture}[
+		tok/.style={draw=black!70, minimum height=0.7cm, inner sep=4pt, outer sep=0, font=\ttfamily\footnotesize, align=center},
+		kw/.style={tok, fill=cyan700!12},
+		ident/.style={tok, fill=white},
+		op/.style={tok, fill=teal700!12},
+		num/.style={tok, fill=yellow700!12},
+		kind/.style={font=\scriptsize, text=black!65},
+	]
+	\node[kw] (t1) {SELECT};
+	\node[kind, below=1pt of t1] {keyword};
+	\node[ident, right=4pt of t1] (t2) {name};
+	\node[kind, below=1pt of t2] {identifier};
+	\node[kw, right=4pt of t2] (t3) {FROM};
+	\node[kind, below=1pt of t3] {keyword};
+	\node[ident, right=4pt of t3] (t4) {users};
+	\node[kind, below=1pt of t4] {identifier};
+	\node[kw, right=4pt of t4] (t5) {WHERE};
+	\node[kind, below=1pt of t5] {keyword};
+	\node[ident, right=4pt of t5] (t6) {age};
+	\node[kind, below=1pt of t6] {identifier};
+	\node[op, right=4pt of t6] (t7) {>=};
+	\node[kind, below=1pt of t7] {operator};
+	\node[num, right=4pt of t7] (t8) {18};
+	\node[kind, below=1pt of t8] {number};
+\end{tikzpicture}

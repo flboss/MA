@@ -1,0 +1,13 @@
+\begin{tikzpicture}[
+		opnode/.style={draw=black!70, fill=teal700!12, rounded corners=3pt, minimum width=1.2cm, minimum height=0.7cm, inner sep=4pt, font=\ttfamily\small, align=center},
+		leaf/.style={draw=black!70, fill=white, rounded corners=3pt, minimum width=1.2cm, minimum height=0.7cm, inner sep=4pt, font=\ttfamily\small, align=center},
+		level 1/.style={sibling distance=4cm, level distance=1.4cm},
+		level 2/.style={sibling distance=2cm, level distance=1.4cm},
+	]
+	\node[opnode] {+}
+	child { node[leaf] {total} }
+	child { node[opnode] {*}
+			child { node[leaf] {1} }
+			child { node[leaf] {2} }
+		};
+\end{tikzpicture}

@@ -1,0 +1,109 @@
+% !TeX root = ../../main.tex
+
+\subsection{Compiler architecture overview}
+\label{sec:compiler}
+
+A compiler is a program that translates source text written in one language into
+an equivalent form in another language.
+When the target is another high-level language rather than machine code,
+for example a query language translated to SQL,
+it is also called a transpiler or a source-to-source compiler.
+Compilation runs in passes, each turning one representation into the next:
+characters into tokens, tokens into a syntax tree, and the tree into a checked, type-annotated tree.
+What happens last differs: a compiler emits the checked tree as target code,
+while an interpreter evaluates it directly,
+typically by walking the tree and executing each node.
+Many real systems mix both ideas, and every pass in either kind can report errors,
+so both need a uniform way of explaining problems in terms of the source text.
+
+\subsubsection{Lexical analysis}
+
+The lexer reads the raw characters and groups them into tokens:
+indivisible units, each with a kind, its text and its position in the source.
+Whitespace and comments typically carry no meaning and are discarded;
+everything else becomes a token:
+
+\begin{figure}[H]
+	\centering
+	\input{figures/comp_tokens.tikz}
+	\caption{The lexer groups source characters into tokens. Gaps between tokens are discarded whitespace.}
+	\label{fig:tokens}
+\end{figure}
+
+Keywords such as \texttt{SELECT} are recognised by lookup in a fixed table,
+while identifiers, numbers and operators are recognised by their shape: a run of letters,
+a run of digits, a known symbol.
+The lexer knows nothing about structure;
+it only rejects input that forms no valid token at all,
+such as an unterminated string literal.
+
+\subsubsection{Syntax analysis}
+
+The parser arranges the token stream into a tree that mirrors the grammatical structure of the input.
+A grammar is a set of rules describing how smaller parts form larger ones,
+for example that a comparison consists of two expressions joined by an operator.
+The resulting syntax tree drops punctuation that carries no meaning,
+such as parentheses and commas, and keeps only the nesting:
+
+\begin{figure}[H]
+	\centering
+	\input{figures/comp_ast.tikz}
+	\caption{Syntax tree for \texttt{total + 1 * 2}. The shape groups \texttt{1 * 2} first, encoding that multiplication binds tighter than addition.}
+	\label{fig:ast}
+\end{figure}
+
+The tree shape is what makes precedence and associativity concrete:
+multiplication binds tighter than addition exactly when the parser nests it deeper.
+A token that fits no rule at its position is a syntax error,
+and instead of stopping at the first one,
+parsers typically skip ahead to a synchronization point,
+such as the end of the line, to collect further errors in the same run.
+
+\subsubsection{Semantic analysis}
+
+A tree can be grammatically valid yet meaningless:
+it may name things that do not exist or combine values in ways that make no sense.
+Semantic analysis checks meaning in two main parts.
+Name resolution connects each identifier to the declaration it refers to,
+following scoping rules: names live in scopes, scopes nest,
+and an inner scope may shadow an outer one. % TODO: footnote
+Type checking then verifies that every construct is applied to
+values of suitable types, following one rule per construct:
+a comparison yields a boolean, arithmetic on numbers yields a number, and so on.
+
+Languages differ in when this checking happens.
+A statically typed language checks types before execution
+and rejects mismatched programs outright;
+a dynamically typed language attaches types to values at run time
+and reports mismatches only when the faulty operation runs.
+Static checking moves a whole class of errors from execution to compilation,
+at the cost of requiring enough type information up front.
+Whether checking happens statically is independent of how results are produced:
+a system can check types up front and still evaluate the tree directly.
+
+\subsubsection{Code generation and interpretation}
+
+Once the tree is checked, there are two ways to obtain results.
+Code generation walks the tree and emits target code,
+typically one construct per tree node:
+each node type has a fixed translation pattern,
+and the generator applies it recursively from the leaves up.
+The mapping is direct when both languages share a construct,
+and one source construct may also expand into several target statements
+when the target language has no equivalent.
+Interpretation instead evaluates the tree directly:
+an executor walks the same nodes and carries out what each one means,
+computing values bottom-up without ever producing a standalone target program.
+Because the tree was checked beforehand,
+both can assume well-typed input and focus purely on producing results.
+
+\subsubsection{Errors and diagnostics}
+
+Every pass reports problems as diagnostics:
+a message, the source location it refers to, and often a machine-readable code.
+To keep reporting after the first problem, each pass recovers in its own way:
+the lexer skips the offending character, the parser jumps to a synchronization point,
+and the semantic analyzer may assign a placeholder type
+so surrounding code can still be checked.
+Diagnostics distinguish errors, which abort compilation,
+from warnings, which flag suspicious but translatable input.
