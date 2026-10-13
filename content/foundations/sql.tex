@@ -14,11 +14,11 @@ using the tables from Section~\ref{sec:relational-model}.
 
 The core of a query has three clauses:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT name, email AS email_address
 FROM users
 WHERE name = 'Bob';
-\end{lstlisting}
+\end{sqlblock}
 
 \texttt{FROM} chooses the source rows,
 \texttt{WHERE} keeps only the rows matching its condition,
@@ -38,12 +38,12 @@ rename them with \texttt{AS}, and \texttt{SELECT *} keeps all columns.
 each ascending (\texttt{ASC}, the default) or descending (\texttt{DESC});
 multiple keys apply left to right:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT id, total
 FROM orders
 ORDER BY total DESC, id ASC
 LIMIT 2;
-\end{lstlisting}
+\end{sqlblock}
 
 \texttt{LIMIT n} keeps only the first \texttt{n} rows,
 and \texttt{OFFSET n} skips the first \texttt{n} rows, together they express pagination.
@@ -55,11 +55,11 @@ so reproducible paging needs a unique key, typically the primary key, as the las
 \texttt{JOIN} pairs rows from two tables according to a condition in \texttt{ON},
 usually a foreign key compared with the primary key it refers to:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT orders.id, orders.total, users.name
 FROM orders
 JOIN users ON orders.user_id = users.id;
-\end{lstlisting}
+\end{sqlblock}
 
 A plain \texttt{JOIN} is an inner join: pairs that match nothing are dropped,
 so the result holds one row per order, each extended with its user's name.
@@ -91,11 +91,11 @@ Tables can also be joined with themselves when a foreign key points into its own
 for example a \texttt{manager\_id} column referring to \texttt{users.id}.
 Each occurrence then needs a distinct alias with \texttt{AS} to tell the two roles apart:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT employee.name, manager.name AS manager
 FROM users AS employee
 JOIN users AS manager ON employee.manager_id = manager.id;
-\end{lstlisting}
+\end{sqlblock}
 
 \subsubsection{Missing values}
 
@@ -111,10 +111,10 @@ and \texttt{WHERE} keeps only rows whose condition is \texttt{TRUE}.
 The ordinary comparison operators therefore cannot detect absence at all,
 which is why \texttt{NULL} has dedicated ones: \texttt{IS NULL} and \texttt{IS NOT NULL}.
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT name FROM users WHERE email IS NULL;
 SELECT name FROM users WHERE email IS NOT NULL;
-\end{lstlisting}
+\end{sqlblock}
 
 The same idea governs aggregation: aggregate functions combine the known inputs
 and have nothing to say about unknown ones, so they skip \texttt{NULL} values.
@@ -130,11 +130,11 @@ collapse a set of rows into a single value.
 Without further clauses the whole result becomes one row; with \texttt{GROUP BY},
 rows sharing the same values are aggregated separately, yielding one result row per group:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT user_id, COUNT(*) AS order_count, SUM(total) AS total_spent
 FROM orders
 GROUP BY user_id;
-\end{lstlisting}
+\end{sqlblock}
 
 This returns one row per user:
 
@@ -161,11 +161,11 @@ for example \texttt{HAVING COUNT(*) > 1} keeps only users with more than one ord
 A query can appear inside another query wherever a value, a list or a table is expected.
 A scalar subquery in \texttt{SELECT} computes one value per result row:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT name,
        (SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) AS order_count
 FROM users;
-\end{lstlisting}
+\end{sqlblock}
 
 This returns the name and number of orders for each user.
 Because the inner query refers to the outer row (\texttt{users.id}),
@@ -173,27 +173,27 @@ it is correlated: it is evaluated once per outer row.
 An uncorrelated subquery is independent of the outer query and runs only once,
 for example a list of values on the right of \texttt{IN}:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT name FROM users
 WHERE id IN (SELECT user_id FROM user_roles WHERE role_id = 1);
-\end{lstlisting}
+\end{sqlblock}
 A subquery in \texttt{FROM} acts as a derived table and must carry an alias:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT * FROM (SELECT * FROM users WHERE name <> 'Bob') AS filtered;
-\end{lstlisting}
+\end{sqlblock}
 
 \subsubsection{Row-level computation}
 
 \texttt{CASE} chooses a value per row from a chain of conditions:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT id, total,
        CASE WHEN total >= 100 THEN 'large'
             WHEN total >= 10 THEN 'medium'
             ELSE 'small' END AS size
 FROM orders;
-\end{lstlisting}
+\end{sqlblock}
 
 Scalar functions compute new columns from existing ones:
 \texttt{LENGTH(s)} counts characters, \texttt{UPPER(s)} and \texttt{LOWER(s)} change case,
@@ -201,11 +201,11 @@ and \texttt{CAST(x AS TEXT)} converts between types.
 \texttt{COALESCE(a, b, ...)} returns its first non-\texttt{NULL} argument and
 expresses defaults directly in a query:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT users.name, COALESCE(profiles.bio, 'no bio') AS bio
 FROM users
 LEFT JOIN profiles ON profiles.user_id = users.id;
-\end{lstlisting}
+\end{sqlblock}
 
 \subsubsection{Numbering rows within groups}
 
@@ -214,11 +214,11 @@ called a partition, without collapsing them.
 \texttt{ROW\_NUMBER() OVER (PARTITION BY ... ORDER BY ...)} numbers the rows of
 each partition separately:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 SELECT id, user_id, total,
        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total DESC) AS rn
 FROM orders;
-\end{lstlisting}
+\end{sqlblock}
 
 Alice's orders are numbered 1 (99.50) and 2 (42.00), Bob's single order is number 1:
 
@@ -246,11 +246,11 @@ keeps the first rows of each group rather than of the whole result.
 \texttt{INSERT} adds rows, \texttt{UPDATE} rewrites columns of the rows matching
 its \texttt{WHERE} clause, and \texttt{DELETE} removes them:
 
-\begin{lstlisting}[style=sql]
+\begin{sqlblock}
 INSERT INTO users (name, email) VALUES ('Carol', 'carol@example.com');
 UPDATE users SET email = 'bob-new@example.com' WHERE name = 'Bob';
 DELETE FROM users WHERE name = 'Carol';
-\end{lstlisting}
+\end{sqlblock}
 
 Omitting \texttt{WHERE} in \texttt{UPDATE} or \texttt{DELETE} affects every row.
 Data-modification statements between \texttt{BEGIN} and \texttt{COMMIT} form a transaction,

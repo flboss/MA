@@ -3,9 +3,28 @@
 \lstdefinestyle{sql}{
 	language=SQL,
 	basicstyle=\ttfamily\small,
-	keywordstyle=\bfseries,
-	commentstyle=\itshape,
+	keywordstyle=\bfseries\color{cyan700},
+	commentstyle=\itshape\color{black!60},
 	showstringspaces=false,
 	breaklines=true,
 	tabsize=4
+}
+
+\newtcblisting{sqlblock}{
+	listing only,
+	listing options={style=sql},
+	colback=cyan700!6,
+	colframe=cyan700,
+	leftrule=1.2pt,
+	toprule=0pt,
+	bottomrule=0pt,
+	rightrule=0pt,
+	sharp corners,
+	boxsep=1pt,
+	top=1pt,
+	bottom=1pt,
+	left=3pt,
+	before skip=\medskipamount,
+	after skip=\medskipamount,
+	breakable
 }
