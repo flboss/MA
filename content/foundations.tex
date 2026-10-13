@@ -116,6 +116,40 @@ Join tables are used the same way, through two such comparisons:
 \input{content/foundations/sql}
 
 \subsection{Hierarchical and graph data models}
+\label{sec:models}
+
+Before the relational model, databases stored records in fixed navigational structures.
+The hierarchical model organises records as a tree: every record has exactly one parent,
+except the root, as in systems such as IBM's IMS of the late 1960s.
+Navigation follows the parent-child links down, which is simple, but the shape is rigid:
+anything with more than one natural parent, like a user holding several roles,
+cannot be represented without duplicating data or bending the tree with cross-links.
+
+The network model loosened this restriction by letting records take part in
+several named relationships at once, each with an owner and its members,
+as in Bachman's Integrated Data Store and the CODASYL standard built on it.
+That restored expressiveness, but at the cost of the programmer navigating the
+database record by record, ``the programmer as navigator''\autocite{bachman1973},
+with programs written against concrete access paths that broke
+whenever the structure changed.
+
+The relational model displaced both by describing data
+``with its natural structure only --- that is, without superimposing
+any additional structure for machine representation purposes''\autocite{codd1970}:
+queries state what is wanted, and the system chooses how to reach it.
+Graph databases in the modern sense take the opposite bet once more,
+storing graphs natively with pattern-matching query languages,
+but they occupy a different niche and need no further detail here.
+
+Grove borrows the hierarchical mental model without reviving hierarchical storage:
+it presents an ordinary relational database as a navigable tree of owned objects,
+hiding the flat structure of keys and joins behind a more intuitive view.
+Because the tree is only a view, the relational substrate keeps its full power:
+many-to-many relationships work through join tables exactly as above,
+which a true hierarchical store cannot express.
+A tree fits data with natural ownership best, and adds little where no hierarchy exists;
+but since the view removes nothing underneath, such data simply reads
+like the flat tables it is.
 
 \input{content/foundations/compiler}
 
