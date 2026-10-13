@@ -19,7 +19,7 @@
 	\node[ident, right=4pt of t5] (t6) {age};
 	\node[kind, below=1pt of t6] {identifier};
 	\node[op, right=4pt of t6] (t7) {>=};
-	\node[kind, below=1pt of t7] {operator};
+	\node[kind, below=10pt of t7] {operator};
 	\node[num, right=4pt of t7] (t8) {18};
 	\node[kind, below=1pt of t8] {number};
 \end{tikzpicture}
