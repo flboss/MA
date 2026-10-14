@@ -155,3 +155,32 @@ like the flat tables it is.
 
 \subsection{Rust and SQLite}
 
+Rust is a systems programming language: it compiles to native machine code with
+no garbage collector and no runtime, giving control over memory layout and
+performance comparable to C and C++.
+What sets it apart is its ownership model, checked statically by the borrow checker:
+every value has exactly one owner, references to it are either shared and
+read-only or exclusive and mutable, and the compiler rejects programs that could
+read freed memory or race on shared state.
+The result is memory safety without run-time overhead.
+Its static type system adds algebraic data types
+and pattern matching that makes invalid states unrepresentable.
+Rust's package ecosystem, crates, and its deterministic performance have made it
+a common choice for compilers, databases and other infrastructure
+where both correctness and speed matter.
+
+SQLite is a relational database system in the form of a library:
+applications link it directly and call into it through function calls
+in the host language, with the entire database held in a single portable file.
+There is no external server to configure, no network protocol
+and no concurrent connection management;
+a query is simply a library call that runs in the caller's process.
+Despite this minimal shape it supports full SQL, including joins, subqueries,
+transactions and window functions.
+Part of its flexibility is how deeply host code can reach in:
+applications can register their own SQL functions and collations,
+hook into transactions and updates, and drive every step from query preparation
+to row retrieval through a small C interface with bindings in many more languages.
+Embedded, file-backed and extensible from ordinary code,
+it fits programs that need a full database without running a database server.
+
