@@ -15,9 +15,9 @@ Row order is not part of the model: two tables holding the same rows in a differ
 
 Rows are identified and connected through keys.
 A primary key is a column, or a minimal combination of columns, whose values uniquely identify each row of a table,
-such as \texttt{users.id} in Table~\ref{tab:users}.
+such as \mono{users.id} in Table~\ref{tab:users}.
 A foreign key is a column holding values that refer to the primary key of another table,
-such as \texttt{orders.user\_id} in Table~\ref{tab:orders}, which refers to \texttt{users.id}.
+such as \mono{orders.user\_id} in Table~\ref{tab:orders}, which refers to \mono{users.id}.
 Keys therefore express relationships between tables without containing any hierarchy:
 the tables remain flat, and the connection exists only as matching values.
 
@@ -31,7 +31,7 @@ the tables remain flat, and the connection exists only as matching values.
 		\textcolor{blue700}{2} & Bob           & bob@example.com   \\
 		\hline
 	\end{tabular}
-	\caption{Example table \texttt{users}.}
+	\caption{Example table \mono{users}.}
 	\label{tab:users}
 \end{table}
 
@@ -46,7 +46,7 @@ the tables remain flat, and the connection exists only as matching values.
 		3           & \textcolor{blue700}{2} & 7.00           \\
 		\hline
 	\end{tabular}
-	\caption{Example table \texttt{orders}, with \texttt{user\_id} as a foreign key into \texttt{users}.}
+	\caption{Example table \mono{orders}, with \mono{user\_id} as a foreign key into \mono{users}.}
 	\label{tab:orders}
 \end{table}
 
@@ -73,7 +73,7 @@ as in Table~\ref{tab:user-roles}.
 		2           & editor        \\
 		\hline
 	\end{tabular}
-	\caption{Example table \texttt{roles}.}
+	\caption{Example table \mono{roles}.}
 	\label{tab:roles}
 \end{table}
 
@@ -88,7 +88,7 @@ as in Table~\ref{tab:user-roles}.
 		\textcolor{blue700}{2} & 2                 \\
 		\hline
 	\end{tabular}
-	\caption{Example join table \texttt{user\_roles}, with foreign keys into \texttt{users} and \texttt{roles}.}
+	\caption{Example join table \mono{user\_roles}, with foreign keys into \mono{users} and \mono{roles}.}
 	\label{tab:user-roles}
 \end{table}
 
@@ -100,11 +100,11 @@ as in Table~\ref{tab:user-roles}.
 \end{figure}
 
 Tables are combined by comparing foreign keys with the primary keys they refer to.
-A join of \texttt{orders} and \texttt{users} pairs each order row with the user row
-whose \texttt{id} equals its \texttt{user\_id} (Table~\ref{tab:join}),
+A join of \mono{orders} and \mono{users} pairs each order row with the user row
+whose \mono{id} equals its \mono{user\_id} (Table~\ref{tab:join}),
 so queries can use columns from both tables at once.
 Join tables are used the same way, through two such comparisons:
-\texttt{user\_roles} joined with \texttt{users} on one side and with \texttt{roles} on the other.
+\mono{user\_roles} joined with \mono{users} on one side and with \mono{roles} on the other.
 
 \begin{table}[H]
 	\centering
@@ -119,7 +119,7 @@ Join tables are used the same way, through two such comparisons:
 		\textcolor{blue700}{2}    & Bob                         & bob@example.com                         & 3                  & \textcolor{blue700}{2}   & 7.00                  \\
 		\hline
 	\end{tabular}
-	\caption{Rows resulting from joining \texttt{users} with \texttt{orders} on the \texttt{orders.user\_id} foreign key.}
+	\caption{Rows resulting from joining \mono{users} with \mono{orders} on the \mono{orders.user\_id} foreign key.}
 	\label{tab:join}
 \end{table}
 

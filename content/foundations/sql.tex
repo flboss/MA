@@ -19,22 +19,22 @@ FROM users
 WHERE name = 'Bob';
 \end{sqlblock}
 
-\texttt{FROM} chooses the source rows,
-\texttt{WHERE} keeps only the rows matching its condition,
-and \texttt{SELECT} chooses the output columns.
+\mono{FROM} chooses the source rows,
+\mono{WHERE} keeps only the rows matching its condition,
+and \mono{SELECT} chooses the output columns.
 Conditions compare columns with literals or other columns
-(\texttt{=}, \texttt{<>}, \texttt{<}, \texttt{>}, \texttt{<=}, \texttt{>=})
-and combine with \texttt{AND}, \texttt{OR} and \texttt{NOT}.
-Although \texttt{SELECT} is written first, it is evaluated after \texttt{WHERE}:
+(\mono{=}, \mono{<>}, \mono{<}, \mono{>}, \mono{<=}, \mono{>=})
+and combine with \mono{AND}, \mono{OR} and \mono{NOT}.
+Although \mono{SELECT} is written first, it is evaluated after \mono{WHERE}:
 filtering happens before projection (the choosing of output columns),
-so a \texttt{WHERE} clause cannot refer to an alias defined in \texttt{SELECT}.
-\texttt{SELECT} may also compute output columns from expressions,
-rename them with \texttt{AS}, and \texttt{SELECT *} keeps all columns.
+so a \mono{WHERE} clause cannot refer to an alias defined in \mono{SELECT}.
+\mono{SELECT} may also compute output columns from expressions,
+rename them with \mono{AS}, and \mono{SELECT *} keeps all columns.
 
 \subsubsection{Sorting and limiting results}
 
-\texttt{ORDER BY} sorts the result rows by one or more expressions,
-each ascending (\texttt{ASC}, the default) or descending (\texttt{DESC});
+\mono{ORDER BY} sorts the result rows by one or more expressions,
+each ascending (\mono{ASC}, the default) or descending (\mono{DESC});
 multiple keys apply left to right:
 
 \begin{sqlblock}
@@ -44,14 +44,14 @@ ORDER BY total DESC, id ASC
 LIMIT 2;
 \end{sqlblock}
 
-\texttt{LIMIT n} keeps only the first \texttt{n} rows,
-and \texttt{OFFSET n} skips the first \texttt{n} rows, together they express pagination.
+\mono{LIMIT n} keeps only the first \mono{n} rows,
+and \mono{OFFSET n} skips the first \mono{n} rows, together they express pagination.
 Rows that compare equal on all sort keys keep an unspecified relative order,
 so reproducible paging needs a unique key, typically the primary key, as the last sort key.
 
 \subsubsection{Joining tables}
 
-\texttt{JOIN} pairs rows from two tables according to a condition in \texttt{ON},
+\mono{JOIN} pairs rows from two tables according to a condition in \mono{ON},
 usually a foreign key compared with the primary key it refers to:
 
 \begin{sqlblock}
@@ -60,10 +60,10 @@ FROM orders
 JOIN users ON orders.user_id = users.id;
 \end{sqlblock}
 
-A plain \texttt{JOIN} is an inner join: pairs that match nothing are dropped,
+A plain \mono{JOIN} is an inner join: pairs that match nothing are dropped,
 so the result holds one row per order, each extended with its user's name.
 Joins chain left to right, which is how join tables are read:
-\texttt{users} joined with \texttt{user\_roles} and then with \texttt{roles}
+\mono{users} joined with \mono{user\_roles} and then with \mono{roles}
 yields one flat row per membership:
 
 \begin{table}[H]
@@ -77,18 +77,18 @@ yields one flat row per membership:
 		Bob   & editor \\
 		\hline
 	\end{tabular}
-	\caption{Joining \texttt{users} through \texttt{user\_roles} to \texttt{roles}.}
+	\caption{Joining \mono{users} through \mono{user\_roles} to \mono{roles}.}
 	\label{tab:memberships}
 \end{table}
 
 Besides the inner join, outer joins keep rows that match nothing:
-a \texttt{LEFT JOIN} keeps every row of the left table,
-a \texttt{RIGHT JOIN} every row of the right table,
-and a \texttt{FULL JOIN} both sides,
-filling missing columns with \texttt{NULL}.
+a \mono{LEFT JOIN} keeps every row of the left table,
+a \mono{RIGHT JOIN} every row of the right table,
+and a \mono{FULL JOIN} both sides,
+filling missing columns with \mono{NULL}.
 Tables can also be joined with themselves when a foreign key points into its own table,
-for example a \texttt{manager\_id} column referring to \texttt{users.id}.
-Each occurrence then needs a distinct alias with \texttt{AS} to tell the two roles apart:
+for example a \mono{manager\_id} column referring to \mono{users.id}.
+Each occurrence then needs a distinct alias with \mono{AS} to tell the two roles apart:
 
 \begin{sqlblock}
 SELECT employee.name, manager.name AS manager
@@ -98,17 +98,17 @@ JOIN users AS manager ON employee.manager_id = manager.id;
 
 \subsubsection{Missing values}
 
-\texttt{NULL} marks a value as absent or unknown.
-It is not a value but the absence of one: \texttt{0}, the empty string and false
+\mono{NULL} marks a value as absent or unknown.
+It is not a value but the absence of one: \mono{0}, the empty string and false
 are ordinary values of their respective types,
-whereas \texttt{NULL} is distinct from every value of every type.
-Unknown values propagate: any comparison or arithmetic involving \texttt{NULL}
-yields \texttt{UNKNOWN} or \texttt{NULL} rather than a concrete value,
-for example \texttt{NULL = 1} is \texttt{UNKNOWN} and \texttt{1 + NULL} is \texttt{NULL}.
-\texttt{UNKNOWN} is a third truth value besides \texttt{TRUE} and \texttt{FALSE},
-and \texttt{WHERE} keeps only rows whose condition is \texttt{TRUE}.
+whereas \mono{NULL} is distinct from every value of every type.
+Unknown values propagate: any comparison or arithmetic involving \mono{NULL}
+yields \mono{UNKNOWN} or \mono{NULL} rather than a concrete value,
+for example \mono{NULL = 1} is \mono{UNKNOWN} and \mono{1 + NULL} is \mono{NULL}.
+\mono{UNKNOWN} is a third truth value besides \mono{TRUE} and \mono{FALSE},
+and \mono{WHERE} keeps only rows whose condition is \mono{TRUE}.
 The ordinary comparison operators therefore cannot detect absence at all,
-which is why \texttt{NULL} has dedicated ones: \texttt{IS NULL} and \texttt{IS NOT NULL}.
+which is why \mono{NULL} has dedicated ones: \mono{IS NULL} and \mono{IS NOT NULL}.
 
 \begin{sqlblock}
 SELECT name FROM users WHERE email IS NULL;
@@ -116,17 +116,17 @@ SELECT name FROM users WHERE email IS NOT NULL;
 \end{sqlblock}
 
 The same idea governs aggregation: aggregate functions combine the known inputs
-and have nothing to say about unknown ones, so they skip \texttt{NULL} values.
-\texttt{COUNT(*)} counts rows and therefore never skips anything, while
-\texttt{COUNT(column)} counts only the known values.
+and have nothing to say about unknown ones, so they skip \mono{NULL} values.
+\mono{COUNT(*)} counts rows and therefore never skips anything, while
+\mono{COUNT(column)} counts only the known values.
 Where there is nothing to combine, the result is itself unknown:
-\texttt{SUM} and \texttt{AVG} over an empty set of rows return \texttt{NULL}, not zero.
+\mono{SUM} and \mono{AVG} over an empty set of rows return \mono{NULL}, not zero.
 
 \subsubsection{Aggregation}
 
-The functions \texttt{COUNT}, \texttt{SUM}, \texttt{AVG}, \texttt{MIN} and \texttt{MAX}
+The functions \mono{COUNT}, \mono{SUM}, \mono{AVG}, \mono{MIN} and \mono{MAX}
 collapse a set of rows into a single value.
-Without further clauses the whole result becomes one row; with \texttt{GROUP BY},
+Without further clauses the whole result becomes one row; with \mono{GROUP BY},
 rows sharing the same values are aggregated separately, yielding one result row per group:
 
 \begin{sqlblock}
@@ -151,14 +151,14 @@ This returns one row per user:
 	\label{tab:order-totals}
 \end{table}
 
-\texttt{HAVING} filters groups after aggregation,
-mirroring how \texttt{WHERE} filters rows before it,
-for example \texttt{HAVING COUNT(*) > 1} keeps only users with more than one order.
+\mono{HAVING} filters groups after aggregation,
+mirroring how \mono{WHERE} filters rows before it,
+for example \mono{HAVING COUNT(*) > 1} keeps only users with more than one order.
 
 \subsubsection{Subqueries}
 
 A query can appear inside another query wherever a value, a list or a table is expected.
-A scalar subquery in \texttt{SELECT} computes one value per result row:
+A scalar subquery in \mono{SELECT} computes one value per result row:
 
 \begin{sqlblock}
 SELECT name,
@@ -167,16 +167,16 @@ FROM users;
 \end{sqlblock}
 
 This returns the name and number of orders for each user.
-Because the inner query refers to the outer row (\texttt{users.id}),
+Because the inner query refers to the outer row (\mono{users.id}),
 it is correlated: it is evaluated once per outer row.
 An uncorrelated subquery is independent of the outer query and runs only once,
-for example a list of values on the right of \texttt{IN}:
+for example a list of values on the right of \mono{IN}:
 
 \begin{sqlblock}
 SELECT name FROM users
 WHERE id IN (SELECT user_id FROM user_roles WHERE role_id = 1);
 \end{sqlblock}
-A subquery in \texttt{FROM} acts as a derived table and must carry an alias:
+A subquery in \mono{FROM} acts as a derived table and must carry an alias:
 
 \begin{sqlblock}
 SELECT * FROM (SELECT * FROM users WHERE name <> 'Bob') AS filtered;
@@ -184,7 +184,7 @@ SELECT * FROM (SELECT * FROM users WHERE name <> 'Bob') AS filtered;
 
 \subsubsection{Row-level computation}
 
-\texttt{CASE} chooses a value per row from a chain of conditions:
+\mono{CASE} chooses a value per row from a chain of conditions:
 
 \begin{sqlblock}
 SELECT id, total,
@@ -195,9 +195,9 @@ FROM orders;
 \end{sqlblock}
 
 Scalar functions compute new columns from existing ones:
-\texttt{LENGTH(s)} counts characters, \texttt{UPPER(s)} and \texttt{LOWER(s)} change case,
-and \texttt{CAST(x AS TEXT)} converts between types.
-\texttt{COALESCE(a, b, ...)} returns its first non-\texttt{NULL} argument and
+\mono{LENGTH(s)} counts characters, \mono{UPPER(s)} and \mono{LOWER(s)} change case,
+and \mono{CAST(x AS TEXT)} converts between types.
+\mono{COALESCE(a, b, ...)} returns its first non-\mono{NULL} argument and
 expresses defaults directly in a query:
 
 \begin{sqlblock}
@@ -210,7 +210,7 @@ LEFT JOIN profiles ON profiles.user_id = users.id;
 
 Window functions compute over a group of related rows,
 called a partition, without collapsing them.
-\texttt{ROW\_NUMBER() OVER (PARTITION BY ... ORDER BY ...)} numbers the rows of
+\mono{ROW\_NUMBER() OVER (PARTITION BY ... ORDER BY ...)} numbers the rows of
 each partition separately:
 
 \begin{sqlblock}
@@ -232,18 +232,18 @@ Alice's orders are numbered 1 (99.50) and 2 (42.00), Bob's single order is numbe
 		3           & 2                 & 7.00           & 1           \\
 		\hline
 	\end{tabular}
-	\caption{Orders numbered per user by descending total. The output order itself is unspecified without \texttt{ORDER BY}.}
+	\caption{Orders numbered per user by descending total. The output order itself is unspecified without \mono{ORDER BY}.}
 	\label{tab:row-number}
 \end{table}
 
-With an empty \texttt{OVER ()} clause the whole result forms one group.
-Filtering on the computed number, for example \texttt{rn <= 5},
+With an empty \mono{OVER ()} clause the whole result forms one group.
+Filtering on the computed number, for example \mono{rn <= 5},
 keeps the first rows of each group rather than of the whole result.
 
 \subsubsection{Changing data}
 
-\texttt{INSERT} adds rows, \texttt{UPDATE} rewrites columns of the rows matching
-its \texttt{WHERE} clause, and \texttt{DELETE} removes them:
+\mono{INSERT} adds rows, \mono{UPDATE} rewrites columns of the rows matching
+its \mono{WHERE} clause, and \mono{DELETE} removes them:
 
 \begin{sqlblock}
 INSERT INTO users (name, email) VALUES ('Carol', 'carol@example.com');
@@ -251,8 +251,8 @@ UPDATE users SET email = 'bob-new@example.com' WHERE name = 'Bob';
 DELETE FROM users WHERE name = 'Carol';
 \end{sqlblock}
 
-Omitting \texttt{WHERE} in \texttt{UPDATE} or \texttt{DELETE} affects every row.
-Data-modification statements between \texttt{BEGIN} and \texttt{COMMIT} form a transaction,
+Omitting \mono{WHERE} in \mono{UPDATE} or \mono{DELETE} affects every row.
+Data-modification statements between \mono{BEGIN} and \mono{COMMIT} form a transaction,
 meaning either all of them take effect or,
-if any fails and the transaction is rolled back with \texttt{ROLLBACK}, none does.
+if any fails and the transaction is rolled back with \mono{ROLLBACK}, none does.
 This all-or-nothing property is called atomicity.

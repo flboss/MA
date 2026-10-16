@@ -30,7 +30,7 @@ everything else becomes a token:
 	\label{fig:tokens}
 \end{figure}
 
-Keywords such as \texttt{SELECT} are recognised by lookup in a fixed table,
+Keywords such as \mono{SELECT} are recognised by lookup in a fixed table,
 while identifiers, numbers and operators are recognised by their shape: a run of letters,
 a run of digits, a known symbol.
 The lexer knows nothing about structure;
@@ -48,14 +48,14 @@ such as parentheses and commas, and keeps only the nesting:
 \begin{figure}[H]
 	\centering
 	\input{figures/comp_ast.tikz}
-	\caption{Syntax tree for \texttt{total + 1 * 2}. The shape groups \texttt{1 * 2} first, encoding that multiplication binds tighter than addition.}
+	\caption{Syntax tree for \mono{total + 1 * 2}. The shape groups \mono{1 * 2} first, encoding that multiplication binds tighter than addition.}
 	\label{fig:ast}
 \end{figure}
 
 The tree shape is what makes precedence and associativity concrete:
 multiplication binds tighter than addition exactly when the parser nests it deeper,
 and a repeated operator groups in a fixed direction,
-e.g.\ \texttt{a - b - c} as \texttt{(a - b) - c} (left-associative).
+e.g.\ \mono{a - b - c} as \mono{(a - b) - c} (left-associative).
 A token that fits no rule at its position is a syntax error,
 and instead of stopping at the first one,
 parsers typically skip ahead to a synchronization point,
