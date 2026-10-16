@@ -206,12 +206,15 @@ FROM users
 LEFT JOIN profiles ON profiles.user_id = users.id;
 \end{sqlblock}
 
-\subsubsection{Numbering rows within groups}
+\subsubsection{Window functions}
 
-Window functions compute over a group of related rows,
-called a partition, without collapsing them.
-\mono{ROW\_NUMBER() OVER (PARTITION BY ... ORDER BY ...)} numbers the rows of
-each partition separately:
+Window functions compute over a group of related rows, called a partition,
+without collapsing them, unlike plain aggregation.
+An \mono{OVER} clause defines the window:
+\mono{PARTITION BY} divides rows into groups and
+\mono{ORDER BY} orders rows within each group.
+An empty \mono{OVER ()} takes the result over all rows as a single group.
+\mono{ROW\_NUMBER()} is a window function which numbers the rows of each partition in order:
 
 \begin{sqlblock}
 SELECT id, user_id, total,
@@ -236,9 +239,9 @@ Alice's orders are numbered 1 (99.50) and 2 (42.00), Bob's single order is numbe
 	\label{tab:row-number}
 \end{table}
 
-With an empty \mono{OVER ()} clause the whole result forms one group.
-Filtering on the computed number, for example \mono{rn <= 5},
-keeps the first rows of each group rather than of the whole result.
+The same clause works with other functions: \mono{RANK()} numbers with gaps for ties,
+and aggregates like \mono{SUM(total) OVER (PARTITION BY user\_id)}
+attach each group's total to every row.
 
 \subsubsection{Changing data}
 
