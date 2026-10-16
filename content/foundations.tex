@@ -15,9 +15,9 @@ Row order is not part of the model: two tables holding the same rows in a differ
 
 Rows are identified and connected through keys.
 A primary key is a column, or a minimal combination of columns, whose values uniquely identify each row of a table,
-such as \mono{users.id} in Table~\ref{tab:users}.
+such as \mono{users.id} in \cref{tab:users}.
 A foreign key is a column holding values that refer to the primary key of another table,
-such as \mono{orders.user\_id} in Table~\ref{tab:orders}, which refers to \mono{users.id}.
+such as \mono{orders.user\_id} in \cref{tab:orders}, which refers to \mono{users.id}.
 Keys therefore express relationships between tables without containing any hierarchy:
 the tables remain flat, and the connection exists only as matching values.
 
@@ -51,17 +51,17 @@ the tables remain flat, and the connection exists only as matching values.
 \end{table}
 
 The shape of such a relationship is described by its cardinality
-(Figure~\ref{fig:cardinalities}).
+(\cref{fig:cardinalities}).
 In a one-to-many relationship, each row on one side relates to any number of rows on the other, but not vice versa:
-each order in Table~\ref{tab:orders} belongs to exactly one user,
-while each user in Table~\ref{tab:users} can have many orders.
+each order in \cref{tab:orders} belongs to exactly one user,
+while each user in \cref{tab:users} can have many orders.
 In a one-to-one relationship, each row relates to at most one row on the other side,
 enforced by a uniqueness constraint on the foreign key.
 In a many-to-many relationship, any number of rows on each side can relate to each other:
 each user can hold many roles, and each role can be held by many users.
 Since a single foreign key column can only point at one row,
 many-to-many relationships require an additional join table holding one foreign key per side,
-as in Table~\ref{tab:user-roles}.
+as in \cref{tab:user-roles}.
 
 \begin{table}[H]
 	\centering
@@ -101,7 +101,7 @@ as in Table~\ref{tab:user-roles}.
 
 Tables are combined by comparing foreign keys with the primary keys they refer to.
 A join of \mono{orders} and \mono{users} pairs each order row with the user row
-whose \mono{id} equals its \mono{user\_id} (Table~\ref{tab:join}),
+whose \mono{id} equals its \mono{user\_id} (\cref{tab:join}),
 so queries can use columns from both tables at once.
 Join tables are used the same way, through two such comparisons:
 \mono{user\_roles} joined with \mono{users} on one side and with \mono{roles} on the other.
