@@ -25,10 +25,10 @@ the tables remain flat, and the connection exists only as matching values.
 	\centering
 	\begin{tabular}{|c|l|l|}
 		\hline
-		\texttt{id} & \texttt{name} & \texttt{email}    \\
+		\texttt{id}            & \texttt{name} & \texttt{email}    \\
 		\hline
-		1           & Alice         & alice@example.com \\
-		2           & Bob           & bob@example.com   \\
+		\textcolor{pink700}{1} & Alice         & alice@example.com \\
+		\textcolor{blue700}{2} & Bob           & bob@example.com   \\
 		\hline
 	\end{tabular}
 	\caption{Example table \texttt{users}.}
@@ -39,11 +39,11 @@ the tables remain flat, and the connection exists only as matching values.
 	\centering
 	\begin{tabular}{|c|c|c|}
 		\hline
-		\texttt{id} & \texttt{user\_id} & \texttt{total} \\
+		\texttt{id} & \texttt{user\_id}      & \texttt{total} \\
 		\hline
-		1           & 1                 & 42.00          \\
-		2           & 1                 & 99.50          \\
-		3           & 2                 & 7.00           \\
+		1           & \textcolor{pink700}{1} & 42.00          \\
+		2           & \textcolor{pink700}{1} & 99.50          \\
+		3           & \textcolor{blue700}{2} & 7.00           \\
 		\hline
 	\end{tabular}
 	\caption{Example table \texttt{orders}, with \texttt{user\_id} as a foreign key into \texttt{users}.}
@@ -81,11 +81,11 @@ as in Table~\ref{tab:user-roles}.
 	\centering
 	\begin{tabular}{|c|c|}
 		\hline
-		\texttt{user\_id} & \texttt{role\_id} \\
+		\texttt{user\_id}      & \texttt{role\_id} \\
 		\hline
-		1                 & 1                 \\
-		1                 & 2                 \\
-		2                 & 2                 \\
+		\textcolor{pink700}{1} & 1                 \\
+		\textcolor{pink700}{1} & 2                 \\
+		\textcolor{blue700}{2} & 2                 \\
 		\hline
 	\end{tabular}
 	\caption{Example join table \texttt{user\_roles}, with foreign keys into \texttt{users} and \texttt{roles}.}
@@ -101,17 +101,27 @@ as in Table~\ref{tab:user-roles}.
 
 Tables are combined by comparing foreign keys with the primary keys they refer to.
 A join of \texttt{orders} and \texttt{users} pairs each order row with the user row
-whose \texttt{id} equals its \texttt{user\_id} (Figure~\ref{fig:join}),
+whose \texttt{id} equals its \texttt{user\_id} (Table~\ref{tab:join}),
 so queries can use columns from both tables at once.
 Join tables are used the same way, through two such comparisons:
 \texttt{user\_roles} joined with \texttt{users} on one side and with \texttt{roles} on the other.
 
-\begin{figure}[H]
+\begin{table}[H]
 	\centering
-	\input{figures/rel_join.tikz}
-	\caption{Row-by-row view of the join between \texttt{orders} and \texttt{users}.}
-	\label{fig:join}
-\end{figure}
+	\footnotesize
+	\setlength{\tabcolsep}{4pt}
+	\begin{tabular}{|c|l|l|c|c|c|}
+		\hline
+		\texttt{users.id}         & \texttt{users.name}         & \texttt{users.email}                    & \texttt{orders.id} & \texttt{orders.user\_id} & \texttt{orders.total} \\
+		\hline
+		\textcolor{pink700}{1}    & Alice                       & alice@example.com                       & 1                  & \textcolor{pink700}{1}   & 42.00                 \\
+		\textcolor{pink700!40}{1} & \textcolor{black!40}{Alice} & \textcolor{black!40}{alice@example.com} & 2                  & \textcolor{pink700}{1}   & 99.50                 \\
+		\textcolor{blue700}{2}    & Bob                         & bob@example.com                         & 3                  & \textcolor{blue700}{2}   & 7.00                  \\
+		\hline
+	\end{tabular}
+	\caption{Rows resulting from joining \texttt{users} with \texttt{orders} on the \texttt{orders.user\_id} foreign key.}
+	\label{tab:join}
+\end{table}
 
 \input{content/foundations/sql}
 
