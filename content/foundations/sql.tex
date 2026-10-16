@@ -6,8 +6,10 @@
 SQL is the standard language for working with relational databases.
 It is declarative: a statement describes the desired result,
 and the database system decides how to compute it.
-Most statements read data, a smaller set changes it.
-This section reuses the tables from \cref{sec:relational-model}.
+Its statements fall into three groups:
+the Data Query Language (DQL) reads data without changing it,
+the Data Manipulation Language (DML) adds, rewrites and removes rows,
+and the Data Definition Language (DDL) defines the tables themselves.
 
 \subsubsection{The shape of a query}
 
@@ -245,6 +247,7 @@ attach each group's total to every row.
 
 \subsubsection{Changing data}
 
+Adding, rewriting and removing rows belongs to the Data Manipulation Language (DML):
 \mono{INSERT} adds rows, \mono{UPDATE} rewrites columns of the rows matching
 its \mono{WHERE} clause, and \mono{DELETE} removes them:
 
@@ -255,7 +258,25 @@ DELETE FROM users WHERE name = 'Carol';
 \end{sqlblock}
 
 Omitting \mono{WHERE} in \mono{UPDATE} or \mono{DELETE} affects every row.
-Data-modification statements between \mono{BEGIN} and \mono{COMMIT} form a transaction,
+DML statements between \mono{BEGIN} and \mono{COMMIT} form a transaction,
 meaning either all of them take effect or,
 if any fails and the transaction is rolled back with \mono{ROLLBACK}, none does.
-This all-or-nothing property is called atomicity.
+This makes the entire transaction atomic.
+
+\subsubsection{Defining structure}
+
+The Data Definition Language (DDL) defines the tables that DQL reads and DML changes.
+\mono{CREATE TABLE} names a table and declares its columns
+with their types, as well as constraints, such as foreign keys or nullability.
+\mono{ALTER TABLE} changes an existing table, for example by adding a column,
+and \mono{DROP TABLE} removes a table with all its rows:
+
+\begin{sqlblock}
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT
+);
+ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1;
+DROP TABLE users;
+\end{sqlblock}
