@@ -133,7 +133,7 @@ SELECT name FROM users WHERE email IS NOT NULL;
 The same idea applies to aggregation, which combines the known inputs
 and cannot process unknown ones, so they skip \mono{NULL}.
 Where there is nothing to combine,
-the result is itself may have undefined semantics,
+the result itself may have undefined semantics,
 for example \mono{SUM} and \mono{AVG} over an empty set of rows
 return \mono{NULL}, not zero.
 
