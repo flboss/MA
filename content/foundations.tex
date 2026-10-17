@@ -140,7 +140,13 @@ and with \mono{roles} on the other.
 
 Before the relational model, databases stored records in fixed navigational structures.
 The hierarchical model organises records as a tree:
-Every record has exactly one parent, except the root.
+Every record has exactly one parent, except the root.\footnote{
+	A tree graph is a structure of nodes:
+	one node, the root, has no parent,
+	every other node has exactly one parent.
+	The nodes belonging to another node are its children,
+	and nodes without children are leaves.
+}
 This was the model used by systems such as IBM's IMS of the late 1960s.
 Navigation follows the parent-child links down,
 which is simple conceptually, but the fixed tree structure limits what is representable.
