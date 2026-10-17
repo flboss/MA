@@ -4,16 +4,17 @@
 \label{sec:sql}
 
 SQL is the standard language for working with relational databases.
-It is declarative: a statement describes the desired result,
-and the database system decides how to compute it.
-Its statements fall into three groups:
-the Data Query Language (DQL) reads data without changing it,
+It is declarative in that a statement describes the desired result,
+and the database system determines how to compute it.
+Its statements can be assigned to one of three groups:
+the Data Query Language (DQL) reads data,
 the Data Manipulation Language (DML) adds, rewrites and removes rows,
 and the Data Definition Language (DDL) defines the tables themselves.
 
-\subsubsection{The shape of a query}
+\subsubsection{Query shape}
 
-The core of a query has three clauses:
+The core of a DQL statement, concisely referred to as a query,
+consists of three clauses:
 
 \begin{sqlblock}
 SELECT name, email AS email_address
@@ -24,20 +25,20 @@ WHERE name = 'Bob';
 \mono{FROM} chooses the source rows,
 \mono{WHERE} keeps only the rows matching its condition,
 and \mono{SELECT} chooses the output columns.
-Conditions compare columns with literals or other columns
+Conditions compare values from columns or literals
 (\mono{=}, \mono{<>}, \mono{<}, \mono{>}, \mono{<=}, \mono{>=})
 and combine with \mono{AND}, \mono{OR} and \mono{NOT}.
-Although \mono{SELECT} is written first, it is evaluated after \mono{WHERE}:
-filtering happens before projection (the choosing of output columns),
+Although \mono{SELECT} is written first, it is evaluated after \mono{WHERE}.
+Filtering happens before projection (the choosing of output columns),
 so a \mono{WHERE} clause cannot refer to an alias defined in \mono{SELECT}.
-\mono{SELECT} may also compute output columns from expressions,
-rename them with \mono{AS}, and \mono{SELECT *} keeps all columns.
+\mono{SELECT} may also compute output columns from expressions
+and rename them with \mono{AS}. \mono{SELECT *} keeps all columns.
 
 \subsubsection{Sorting and limiting results}
 
 \mono{ORDER BY} sorts the result rows by one or more expressions,
-each ascending (\mono{ASC}, the default) or descending (\mono{DESC});
-multiple keys apply left to right:
+each ascending (\mono{ASC}, the default) or descending (\mono{DESC}).
+Multiple keys apply left to right:
 
 \begin{sqlblock}
 SELECT id, total
@@ -47,7 +48,8 @@ LIMIT 2;
 \end{sqlblock}
 
 \mono{LIMIT n} keeps only the first \mono{n} rows,
-and \mono{OFFSET n} skips the first \mono{n} rows, together they express pagination.
+and \mono{OFFSET n} skips the first \mono{n} rows,
+together they implement pagination.
 Rows that compare equal on all sort keys keep an unspecified relative order,
 so reproducible paging needs a unique key, typically the primary key, as the last sort key.
 
@@ -62,9 +64,10 @@ FROM orders
 JOIN users ON orders.user_id = users.id;
 \end{sqlblock}
 
-A plain \mono{JOIN} is an inner join: pairs that match nothing are dropped,
-so the result holds one row per order, each extended with its user's name.
-Joins chain left to right, which is how join tables are read:
+A plain \mono{JOIN} is an inner join, which drops pairs that match nothing.
+In the above statement, the result holds one row per order,
+each extended with its user's name.
+Multiple joins can be chained, which is how join tables are read.
 \mono{users} joined with \mono{user\_roles} and then with \mono{roles}
 yields one flat row per membership:
 
@@ -72,25 +75,28 @@ yields one flat row per membership:
 	\centering
 	\begin{tabular}{|l|l|}
 		\hline
-		user  & role   \\
+		\texttt{user} & \texttt{role} \\
 		\hline
-		Alice & admin  \\
-		Alice & editor \\
-		Bob   & editor \\
+		Alice         & admin         \\
+		Alice         & editor        \\
+		Bob           & editor        \\
 		\hline
 	\end{tabular}
-	\caption{Joining \mono{users} through \mono{user\_roles} to \mono{roles}.}
+	\caption{Rows from joining \mono{users} through \mono{user\_roles} to \mono{roles}.}
 	\label{tab:memberships}
 \end{table}
 
-Besides the inner join, outer joins keep rows that match nothing:
-a \mono{LEFT JOIN} keeps every row of the left table,
+Unlike the inner join, outer joins keep rows
+that match nothing on the other side.
+A \mono{LEFT JOIN} keeps every row of the left table,
 a \mono{RIGHT JOIN} every row of the right table,
-and a \mono{FULL JOIN} both sides,
+and a \mono{FULL JOIN} keeps all rows from both sides,
 filling missing columns with \mono{NULL}.
-Tables can also be joined with themselves when a foreign key points into its own table,
+Tables can also be joined with themselves
+when a foreign key points into its own table,
 for example a \mono{manager\_id} column referring to \mono{users.id}.
-Each occurrence then needs a distinct alias with \mono{AS} to tell the two roles apart:
+Each occurrence then needs a distinct alias
+with \mono{AS} to tell the two roles apart:
 
 \begin{sqlblock}
 SELECT employee.name, manager.name AS manager
@@ -101,15 +107,22 @@ JOIN users AS manager ON employee.manager_id = manager.id;
 \subsubsection{Missing values}
 
 \mono{NULL} marks a value as absent or unknown.
-It is not a value but the absence of one: \mono{0}, the empty string and false
-are ordinary values of their respective types,
-whereas \mono{NULL} is distinct from every value of every type.
-Unknown values propagate: any comparison or arithmetic involving \mono{NULL}
+It is itself not a value but the absence of one.
+Unlike \mono{0}, the empty string and false,
+which are ordinary values of their respective types,
+\mono{NULL} is distinct from every value of every type.
+Unknown values have special propagation behavior.
+Any comparison or arithmetic involving \mono{NULL}
 yields \mono{UNKNOWN} or \mono{NULL} rather than a concrete value,
 for example \mono{NULL = 1} is \mono{UNKNOWN} and \mono{1 + NULL} is \mono{NULL}.
 \mono{UNKNOWN} is a third truth value besides \mono{TRUE} and \mono{FALSE},
-and \mono{WHERE} keeps only rows whose condition is \mono{TRUE}.
-The ordinary comparison operators therefore cannot detect absence at all,
+which are known collectively as three-valued logic (3VL).
+This system requires careful handling of propagation rules
+and attention to the behavior of the value's consumer,
+for example \mono{WHERE} keeps only rows whose condition is \mono{TRUE},
+whereas \mono{CHECK} constraints reject only \mono{FALSE},
+so \mono{UNKNOWN} does not always behave like either other truth value.
+The ordinary comparison operators cannot detect absence,
 which is why \mono{NULL} has dedicated ones: \mono{IS NULL} and \mono{IS NOT NULL}.
 
 \begin{sqlblock}
@@ -117,19 +130,20 @@ SELECT name FROM users WHERE email IS NULL;
 SELECT name FROM users WHERE email IS NOT NULL;
 \end{sqlblock}
 
-The same idea governs aggregation: aggregate functions combine the known inputs
-and have nothing to say about unknown ones, so they skip \mono{NULL} values.
-\mono{COUNT(*)} counts rows and therefore never skips anything, while
-\mono{COUNT(column)} counts only the known values.
-Where there is nothing to combine, the result is itself unknown:
-\mono{SUM} and \mono{AVG} over an empty set of rows return \mono{NULL}, not zero.
+The same idea applies to aggregation, which combines the known inputs
+and cannot process unknown ones, so they skip \mono{NULL}.
+Where there is nothing to combine,
+the result is itself may have undefined semantics,
+for example \mono{SUM} and \mono{AVG} over an empty set of rows
+return \mono{NULL}, not zero.
 
 \subsubsection{Aggregation}
 
-The functions \mono{COUNT}, \mono{SUM}, \mono{AVG}, \mono{MIN} and \mono{MAX}
+Functions like \mono{COUNT}, \mono{SUM}, \mono{AVG}, \mono{MIN} and \mono{MAX}
 collapse a set of rows into a single value.
-Without further clauses the whole result becomes one row; with \mono{GROUP BY},
-rows sharing the same values are aggregated separately, yielding one result row per group:
+Without further clauses the whole result becomes one row.
+\mono{GROUP BY} separates rows sharing the same values to be aggregated separately,
+yielding one result row per group:
 
 \begin{sqlblock}
 SELECT user_id, COUNT(*) AS order_count, SUM(total) AS total_spent
@@ -160,7 +174,8 @@ for example \mono{HAVING COUNT(*) > 1} keeps only users with more than one order
 \subsubsection{Subqueries}
 
 A query can appear inside another query wherever a value, a list or a table is expected.
-A scalar subquery in \mono{SELECT} computes one value per result row:
+Scalar subqueries in \mono{SELECT} must return a single row with a single column,
+and compute one value per result row:
 
 \begin{sqlblock}
 SELECT name,
@@ -169,16 +184,18 @@ FROM users;
 \end{sqlblock}
 
 This returns the name and number of orders for each user.
-Because the inner query refers to the outer row (\mono{users.id}),
-it is correlated: it is evaluated once per outer row.
+Because the inner query refers to an outer row (\mono{users.id}),
+it is correlated, which means it is evaluated once per outer row.
 An uncorrelated subquery is independent of the outer query and runs only once,
-for example a list of values on the right of \mono{IN}:
+for example a subquery on the right of \mono{IN},
+which must return any number of rows with a single column:
 
 \begin{sqlblock}
 SELECT name FROM users
 WHERE id IN (SELECT user_id FROM user_roles WHERE role_id = 1);
 \end{sqlblock}
-A subquery in \mono{FROM} acts as a derived table and must carry an alias:
+
+A subquery in \mono{FROM} can take any shape and acts as a derived table:
 
 \begin{sqlblock}
 SELECT * FROM (SELECT * FROM users WHERE name <> 'Bob') AS filtered;
@@ -196,11 +213,11 @@ SELECT id, total,
 FROM orders;
 \end{sqlblock}
 
-Scalar functions compute new columns from existing ones:
+Scalar functions compute new values from existing ones, for example
 \mono{LENGTH(s)} counts characters, \mono{UPPER(s)} and \mono{LOWER(s)} change case,
 and \mono{CAST(x AS TEXT)} converts between types.
-\mono{COALESCE(a, b, ...)} returns its first non-\mono{NULL} argument and
-expresses defaults directly in a query:
+\mono{COALESCE(a, b, ...)} is an example of a variadic scalar function and
+returns its first non-\mono{NULL} argument, commonly used to express defaults:
 
 \begin{sqlblock}
 SELECT users.name, COALESCE(profiles.bio, 'no bio') AS bio
@@ -210,13 +227,13 @@ LEFT JOIN profiles ON profiles.user_id = users.id;
 
 \subsubsection{Window functions}
 
-Window functions compute over a group of related rows, called a partition,
-without collapsing them, unlike plain aggregation.
-An \mono{OVER} clause defines the window:
-\mono{PARTITION BY} divides rows into groups and
-\mono{ORDER BY} orders rows within each group.
+Window functions compute over a group of related rows,
+called a partition, without collapsing them, unlike plain aggregation.
+An \mono{OVER} clause defines the window,
+consisting of \mono{PARTITION BY}, which divides rows into groups,
+and \mono{ORDER BY} to order rows within each group.
 An empty \mono{OVER ()} takes the result over all rows as a single group.
-\mono{ROW\_NUMBER()} is a window function which numbers the rows of each partition in order:
+For example, \mono{ROW\_NUMBER()} numbers the rows of each partition in order:
 
 \begin{sqlblock}
 SELECT id, user_id, total,
@@ -224,7 +241,9 @@ SELECT id, user_id, total,
 FROM orders;
 \end{sqlblock}
 
-Alice's orders are numbered 1 (99.50) and 2 (42.00), Bob's single order is number 1:
+Alice's orders are numbered 1 (99.50) and 2 (42.00),
+Bob's single order is number 1.
+The output order itself is unspecified without an outer \mono{ORDER BY}.
 
 \begin{table}[H]
 	\centering
@@ -237,19 +256,19 @@ Alice's orders are numbered 1 (99.50) and 2 (42.00), Bob's single order is numbe
 		3           & 2                 & 7.00           & 1           \\
 		\hline
 	\end{tabular}
-	\caption{Orders numbered per user by descending total. The output order itself is unspecified without \mono{ORDER BY}.}
+	\caption{Orders numbered per user by descending total.}
 	\label{tab:row-number}
 \end{table}
 
-The same clause works with other functions: \mono{RANK()} numbers with gaps for ties,
-and aggregates like \mono{SUM(total) OVER (PARTITION BY user\_id)}
-attach each group's total to every row.
+Other window functions include \mono{RANK()}, which numbers with gaps for ties,
+and aggregates like \mono{SUM(total) OVER (PARTITION BY user\_id)},
+attaching each group's total to every row.
 
 \subsubsection{Changing data}
 
-Adding, rewriting and removing rows belongs to the Data Manipulation Language (DML):
-\mono{INSERT} adds rows, \mono{UPDATE} rewrites columns of the rows matching
-its \mono{WHERE} clause, and \mono{DELETE} removes them:
+Adding, rewriting and removing rows belongs to the Data Manipulation Language (DML).
+\mono{INSERT} adds rows, \mono{UPDATE} rewrites columns of the rows
+matching its \mono{WHERE} clause, and \mono{DELETE} removes them:
 
 \begin{sqlblock}
 INSERT INTO users (name, email) VALUES ('Carol', 'carol@example.com');
@@ -258,16 +277,17 @@ DELETE FROM users WHERE name = 'Carol';
 \end{sqlblock}
 
 Omitting \mono{WHERE} in \mono{UPDATE} or \mono{DELETE} affects every row.
-DML statements between \mono{BEGIN} and \mono{COMMIT} form a transaction,
-meaning either all of them take effect or,
+DML statements between \mono{BEGIN} and \mono{COMMIT} form a transaction.
+Either all of them take effect or,
 if any fails and the transaction is rolled back with \mono{ROLLBACK}, none does.
 This makes the entire transaction atomic.
 
 \subsubsection{Defining structure}
 
-The Data Definition Language (DDL) defines the tables that DQL reads and DML changes.
-\mono{CREATE TABLE} names a table and declares its columns
-with their types, as well as constraints, such as foreign keys or nullability.
+The Data Definition Language (DDL) is used to define the tables
+that DQL reads and DML changes.
+\mono{CREATE TABLE} names a table and declares its columns along with their types,
+as well as constraints, such as foreign keys or nullability.
 \mono{ALTER TABLE} changes an existing table, for example by adding a column,
 and \mono{DROP TABLE} removes a table with all its rows:
 

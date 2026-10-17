@@ -3,24 +3,26 @@
 \subsection{Compiler architecture overview}
 \label{sec:compiler}
 
-A compiler is a program that translates source text written in one language into
-an equivalent form in another language.
-When the target is another high-level language rather than machine code,
-for example a query language translated to SQL,
+A compiler is a program that translates source code written in one language
+into an equivalent form in another language.
+When the target and source languages are both high-level languages,
 it is also called a transpiler or a source-to-source compiler.
-Compilation runs in passes, each turning one representation into the next:
-characters into tokens, tokens into a syntax tree, and the tree into a checked, type-annotated tree.
-What happens last differs: a compiler emits the checked tree as target code,
-while an interpreter evaluates it directly,
-typically by walking the tree and executing each node.
-Many real systems mix both ideas, and every pass in either kind can report errors,
-so both need a uniform way of explaining problems in terms of the source text.
+Modern compilation consists of several passes,
+each turning one representation into the next.
+A compiler then emits target code,
+while an interpreter evaluates its internal representation directly,
+for example by walking a syntax tree or executing byte code.
+Many systems combine both approaches,
+for example a runtime may interpret an internal representation
+and decide to JIT-compile some portions to native code.
 
 \subsubsection{Lexical analysis}
 
-The lexer reads the raw characters and groups them into tokens:
-indivisible units, each with a kind, its text and its position in the source.
-Whitespace and comments typically carry no meaning and are discarded;
+Lexical analysis is normally the first pass of a compiler.
+The lexer reads the raw characters and groups them into tokens.
+Tokens are indivisible units, each with a kind, its payload
+and its position in the source for user-friendly diagnostics.
+Whitespace and comments typically carry no meaning and are discarded,
 everything else becomes a token:
 
 \begin{figure}[H]
@@ -31,18 +33,18 @@ everything else becomes a token:
 \end{figure}
 
 Keywords such as \mono{SELECT} are recognised by lookup in a fixed table,
-while identifiers, numbers and operators are recognised by their shape: a run of letters,
-a run of digits, a known symbol.
-The lexer knows nothing about structure;
+while identifiers, numbers and operators are recognised by their shape.
+The lexer knows nothing about syntactic structure,
 it only rejects input that forms no valid token at all,
 such as an unterminated string literal.
 
 \subsubsection{Syntax analysis}
 
-The parser arranges the token stream into a tree that mirrors the grammatical structure of the input.
-A grammar is a set of rules describing how smaller parts form larger ones,
+The parser arranges the stream of tokens produced by lexical analysis
+into a tree that mirrors the grammatical structure of the input.
+A grammar is a set of language rules describing how smaller parts form larger ones,
 for example that a comparison consists of two expressions joined by an operator.
-The resulting syntax tree drops punctuation that carries no meaning,
+The resulting syntax tree drops punctuation that carries no meaning by itself,
 such as parentheses and commas, and keeps only the nesting:
 
 \begin{figure}[H]
@@ -52,62 +54,68 @@ such as parentheses and commas, and keeps only the nesting:
 	\label{fig:ast}
 \end{figure}
 
-The tree shape is what makes precedence and associativity concrete:
-multiplication binds tighter than addition exactly when the parser nests it deeper,
-and a repeated operator groups in a fixed direction,
+The tree shape is what concretizes precedence and associativity.
+For example, if the grammar defines that multiplication binds tighter than addition,
+the parser must nest it deeper.
+Or if a repeated operator is defined to group in a fixed direction,
+the parser encodes this as nested structure,
 e.g.\ \mono{a - b - c} as \mono{(a - b) - c} (left-associative).
-A token that fits no rule at its position is a syntax error,
-and instead of stopping at the first one,
+A token that fits no rule at its position is a syntax error.
+Instead of stopping at the first invalid token,
 parsers typically skip ahead to a synchronization point,
 such as the end of the line, to collect further errors in the same run.
 
 \subsubsection{Semantic analysis}
 
-A tree can be grammatically valid yet meaningless:
+A syntax tree can be grammatically valid yet semantically undefined,
 it may name things that do not exist or combine values in ways that make no sense.
-Semantic analysis checks meaning in two main parts.
+Semantic analysis checks meaning against the source language's rules.
 Name resolution connects each identifier to the declaration it refers to,
-following scoping rules: names live in scopes, scopes nest,
-and an inner scope may shadow an outer one.\footnote{Shadowing means an inner
-	declaration hides an outer declaration of the same name:
-	within the inner scope, the name refers to the inner declaration.}
-Type checking then verifies that every construct is applied to
-values of suitable types, following one rule per construct:
-a comparison yields a boolean, arithmetic on numbers yields a number, and so on.
+following scoping rules: names belong to scopes, scopes nest,
+and an inner scope may shadow an outer one.\footnote{
+	Shadowing means an inner declaration hides
+	an outer declaration of the same name.
+	Within the inner scope, the name then refers to the inner declaration.}
+Type checking then verifies that every source construct is applied to
+values of suitable types, according to specific rules for each construct.
+For example a comparison always yields a boolean,
+and arithmetic cannot be performed between a string and a number.
 
 Languages differ in when this checking happens.
 A statically typed language checks types before execution
-and rejects mismatched programs outright;
-a dynamically typed language attaches types to values at run time
+and rejects mismatched programs outright,
+whereas a dynamically typed language attaches types to values at runtime
 and reports mismatches only when the faulty operation runs.
-Static checking moves a whole class of errors from execution to compilation,
+Static type checking moves a whole class of errors from execution to compilation,
 at the cost of requiring enough type information up front.
-Whether checking happens statically is independent of how results are produced:
+Whether checking happens statically is independent of how results are produced,
 a system can check types up front and still evaluate the tree directly.
 
 \subsubsection{Code generation and interpretation}
 
-Once the tree is checked, there are two ways to obtain results.
+Once the tree is checked, there are two main approaches to obtaining results.
 Code generation walks the tree and emits target code,
-typically one construct per tree node:
-each node type has a fixed translation pattern,
+typically one target construct per tree node.
+Each node type has a fixed translation pattern,
 and the generator applies it recursively from the leaves up.
-The mapping is direct when both languages share a construct,
-and one source construct may also expand into several target statements
-when the target language has no equivalent.
-Interpretation instead evaluates the tree directly:
-an executor walks the same nodes and carries out what each one means,
+The mapping is direct when the source and target languages share a construct.
+Abstractions for which the target language has no equivalent
+may also expand into several target statement.
+Interpretation instead evaluates the tree directly.
+An executor walks the same nodes and carries out what each one means,
 computing values bottom-up without ever producing a standalone target program.
-Because the tree was checked beforehand,
-both can assume well-typed input and focus purely on producing results.
+If the tree was type checked beforehand,
+both approaches can assume well-typed input and focus purely on producing results,
+otherwise runtime type guards are additionally required.
 
 \subsubsection{Errors and diagnostics}
 
-Every pass reports problems as diagnostics:
-a message, the source location it refers to, and often a machine-readable code.
-To keep reporting after the first problem, each pass recovers in its own way:
-the lexer skips the offending character, the parser jumps to a synchronization point,
+Every compilation pass reports problems it encounters as diagnostics.
+A diagnostic typically consists of a message, the source location it refers to,
+and a machine-readable error code.
+To keep reporting after the first encountered issue, each pass recovers in its own way.
+The lexer skips the offending character, the parser jumps to a synchronization point,
 and the semantic analyzer may assign a placeholder type
-so surrounding code can still be checked.
+so that checking of independent portions can still be carried out.
 Diagnostics distinguish errors, which abort compilation,
 from warnings, which flag suspicious but translatable input.

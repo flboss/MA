@@ -6,20 +6,28 @@
 \label{sec:relational-model}
 
 The relational model, introduced by Edgar F. Codd in 1970\autocite{codd1970},
-organises data as relations: unordered sets of tuples with a fixed number of named attributes.
+organises data as relations,
+unordered sets of tuples with a fixed number of named attributes.
 It is the data model behind most widely used database systems today.
-Each relation is conventionally shown as a table, in which each row corresponds to one tuple and each column to one attribute.
-The schema of a relation defines its structure: the relation name and, for each column, its name and value domain.
+Each relation is conventionally shown as a table,
+in which each row corresponds to one tuple and each column to one attribute.
+The schema of a relation defines its structure,
+consisting of the relation name and, for each column, its name and value domain.
 The data itself is the current set of rows.
-Row order is not part of the model: two tables holding the same rows in a different order contain the same data.
+Row order is not part of the model,
+two tables containing the same rows in a different order
+are considered to be holding the same data.
 
 Rows are identified and connected through keys.
-A primary key is a column, or a minimal combination of columns, whose values uniquely identify each row of a table,
+A primary key is a column, or a minimal combination of columns,
+whose values uniquely identify each row of a table,
 such as \mono{users.id} in \cref{tab:users}.
-A foreign key is a column holding values that refer to the primary key of another table,
-such as \mono{orders.user\_id} in \cref{tab:orders}, which refers to \mono{users.id}.
-Keys therefore express relationships between tables without containing any hierarchy:
-the tables remain flat, and the connection exists only as matching values.
+A foreign key is a column holding values
+that correspond to the primary key of another table,
+such as \mono{orders.user\_id} in \cref{tab:orders},
+which refers to \mono{users.id}.
+Keys therefore express relationships between tables without containing hierarchy.
+The tables remain flat, and the connection exists only as matching values.
 
 \begin{table}[H]
 	\centering
@@ -52,16 +60,17 @@ the tables remain flat, and the connection exists only as matching values.
 
 The shape of such a relationship is described by its cardinality
 (\cref{fig:cardinalities}).
-In a one-to-many relationship, each row on one side relates to any number of rows on the other, but not vice versa:
+In a one-to-many relationship, each row on one side relates
+to any number of rows on the other, but not vice versa:
 each order in \cref{tab:orders} belongs to exactly one user,
 while each user in \cref{tab:users} can have many orders.
 In a one-to-one relationship, each row relates to at most one row on the other side,
 enforced by a uniqueness constraint on the foreign key.
-In a many-to-many relationship, any number of rows on each side can relate to each other:
+Many-to-many relationships allow any number of rows on each side to relate to each other:
 each user can hold many roles, and each role can be held by many users.
 Since a single foreign key column can only point at one row,
-many-to-many relationships require an additional join table holding one foreign key per side,
-as in \cref{tab:user-roles}.
+many-to-many relationships require an additional join table
+holding one foreign key per side, as in \cref{tab:user-roles}.
 
 \begin{table}[H]
 	\centering
@@ -102,9 +111,10 @@ as in \cref{tab:user-roles}.
 Tables are combined by comparing foreign keys with the primary keys they refer to.
 A join of \mono{orders} and \mono{users} pairs each order row with the user row
 whose \mono{id} equals its \mono{user\_id} (\cref{tab:join}),
-so queries can use columns from both tables at once.
-Join tables are used the same way, through two such comparisons:
-\mono{user\_roles} joined with \mono{users} on one side and with \mono{roles} on the other.
+so that attributes of related rows from both tables are accessible together.
+Join tables are used the same way, through two such comparisons,
+for example \mono{user\_roles} joined with \mono{users} on one side
+and with \mono{roles} on the other.
 
 \begin{table}[H]
 	\centering
@@ -129,68 +139,77 @@ Join tables are used the same way, through two such comparisons:
 \label{sec:models}
 
 Before the relational model, databases stored records in fixed navigational structures.
-The hierarchical model organises records as a tree: every record has exactly one parent,
-except the root, as in systems such as IBM's IMS of the late 1960s.
-Navigation follows the parent-child links down, which is simple, but the shape is rigid:
-anything with more than one natural parent, like a user holding several roles,
-cannot be represented without duplicating data or bending the tree with cross-links.
+The hierarchical model organises records as a tree:
+Every record has exactly one parent, except the root.
+This was the model used by systems such as IBM's IMS of the late 1960s.
+Navigation follows the parent-child links down,
+which is simple conceptually, but the fixed tree structure limits what is representable.
+Anything with more than one natural parent, like a user holding several roles,
+cannot be represented without duplicating data
+or bypassing the tree structure with cross-links.
 
 The network model loosened this restriction by letting records take part in
 several named relationships at once, each with an owner and its members,
 as in Bachman's Integrated Data Store and the CODASYL standard built on it.
-That restored expressiveness, but at the cost of the programmer navigating the
-database record by record, ``the programmer as navigator''\autocite{bachman1973},
-with programs written against concrete access paths that broke
-whenever the structure changed.
+This came with the cost of the user navigating the database record by record,
+``the programmer as navigator''\autocite{bachman1973},
+with programs written against concrete access paths.
 
 The relational model displaced both by describing data
 ``with its natural structure only---that is, without superimposing
-any additional structure for machine representation purposes''\autocite{codd1970}:
-queries state what is wanted, and the system chooses how to reach it.
-Graph databases in the modern sense take the opposite bet once more,
-storing graphs natively with pattern-matching query languages,
-but they occupy a different niche and need no further detail here.
+any additional structure for machine representation purposes''\autocite{codd1970}.
+Queries state what is wanted, and the system decides how to best reach it.
+Graph databases in the modern sense take other approaches again,
+storing graphs natively with pattern-matching query languages.
 
-Grove borrows the hierarchical mental model without reviving hierarchical storage:
-it presents an ordinary relational database as a navigable tree of owned objects,
-hiding the flat structure of keys and joins behind a more intuitive view.
-Because the tree is only a view, the relational substrate keeps its full power:
-many-to-many relationships work through join tables exactly as above,
+Grove borrows ideas from the hierarchical model
+without being tied to hierarchical storage.
+It presents an ordinary relational database
+as a set of navigable trees of owned objects,
+abstracting over the flat structure of keys and joins,
+and exposing a nested view to the user.
+Because the tree is only a layered view,
+the relational storage retains most of its features,
+for example many-to-many relationships work through join tables
+exactly as they would on the underlying relational database,
 which a true hierarchical store cannot express.
-A tree fits data with natural ownership best, and adds little where no hierarchy exists;
-but since the view removes nothing underneath, such data simply reads
-like the flat tables it is.
+A tree fits data with natural ownership best,
+and adds little where no hierarchy exists, such data remains flat.
 
 \input{content/foundations/compiler}
 
 \subsection{Rust and SQLite}
 
-Rust is a systems programming language: it compiles to native machine code with
-no garbage collector and no runtime, giving control over memory layout and
-performance comparable to C and C++.
-What sets it apart is its ownership model, checked statically by the borrow checker:
-every value has exactly one owner, references to it are either shared and
-read-only or exclusive and mutable, and the compiler rejects programs that could
-read freed memory or race on shared state.
-The result is memory safety without run-time overhead.
-Its static type system adds algebraic data types
-and pattern matching that makes invalid states unrepresentable.
-Rust's package ecosystem, crates, and its deterministic performance have made it
-a common choice for compilers, databases and other infrastructure
-where both correctness and speed matter.
+Rust is a systems programming language.
+It compiles to native machine code with no garbage collector and no runtime,
+giving control over memory layout and performance comparable to C and C++.
+Its main distinguishing feature is its ownership model,
+checked statically by the borrow checker.
+Every value has exactly one owner,
+and references to it are either shared and read-only or exclusive and mutable.
+The compiler enforces these rules
+and rejects programs that could read freed memory or race on shared state,
+resulting in a guarantee of memory safety without run-time overhead,
+as well as rich compiler diagnostics from static analysis.
+Its static type system includes algebraic data types
+and powerful pattern matching, making it ergonomic to model states
+and make invalid states unrepresentable.
+Rust's package ecosystem, crates, its modern and coherent development toolchain,
+and its deterministic performance have made it a common choice
+for infrastructure where both correctness and speed matter.
 
-SQLite is a relational database system in the form of a library:
-applications link it directly and call into it through function calls
-in the host language, with the entire database held in a single portable file.
-There is no external server to configure, no network protocol
-and no concurrent connection management;
-a query is simply a library call that runs in the caller's process.
-Despite this minimal shape it supports full SQL, including joins, subqueries,
-transactions and window functions.
-Part of its flexibility is how deeply host code can reach in:
-applications can register their own SQL functions and collations,
+SQLite is a relational database system in the form of a library and supports full SQL.
+Applications link it directly and call into it through function calls,
+with the entire database held in a single portable file.
+A query is simply a library call that runs in the caller's process,
+avoiding any external server configuration
+and network or inter-process communication of any kind.
+Part of its flexibility is how much control host code has over the database.
+Applications can register custom SQL functions, including table-valued ones,
 hook into transactions and updates, and drive every step from query preparation
-to row retrieval through a small C interface with bindings in many more languages.
-Embedded, file-backed and extensible from ordinary code,
-it fits programs that need a full database without running a database server.
+to row retrieval through a small C interface with bindings in most languages.
+Its embedded, file-backed and extensible nature makes is suitable for
+programs that need a full database and control over it,
+but do not need to share the database with other consumers
+through a server-based system.
 
