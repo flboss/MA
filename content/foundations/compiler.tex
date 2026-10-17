@@ -14,7 +14,11 @@ while an interpreter evaluates its internal representation directly,
 for example by walking a syntax tree or executing byte code.
 Many systems combine both approaches,
 for example a runtime may interpret an internal representation
-and decide to JIT-compile some portions to native code.
+and decide to JIT-compile some portions to native code.\footnote{
+	Just-in-time (JIT) compilation translates code
+	into native machine code at runtime,
+	often to speed up frequently executed parts of a program.
+}
 
 \subsubsection{Lexical analysis}
 
@@ -43,7 +47,11 @@ such as an unterminated string literal.
 The parser arranges the stream of tokens produced by lexical analysis
 into a tree that mirrors the grammatical structure of the input.
 A grammar is a set of language rules describing how smaller parts form larger ones,
-for example that a comparison consists of two expressions joined by an operator.
+for example that a comparison consists of two expressions joined by an operator.\footnote{
+	Grammars are often written in a standardized notation,
+	such as Extended Backus–Naur Form (EBNF),
+	which defines a formal syntax to specify a language's syntax rules.
+}
 The resulting syntax tree drops punctuation that carries no meaning by itself,
 such as parentheses and commas, and keeps only the nesting:
 
@@ -75,7 +83,8 @@ following scoping rules: names belong to scopes, scopes nest,
 and an inner scope may shadow an outer one.\footnote{
 	Shadowing means an inner declaration hides
 	an outer declaration of the same name.
-	Within the inner scope, the name then refers to the inner declaration.}
+	Within the inner scope, the name then refers to the inner declaration.
+}
 Type checking then verifies that every source construct is applied to
 values of suitable types, according to specific rules for each construct.
 For example a comparison always yields a boolean,
