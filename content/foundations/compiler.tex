@@ -11,7 +11,7 @@ Modern compilation consists of several passes,
 each turning one representation into the next.
 A compiler then emits target code,
 while an interpreter evaluates its internal representation directly,
-for example by walking a syntax tree or executing byte code.
+for example by walking an abstract syntax tree or executing byte code.
 Many systems combine both approaches,
 for example a runtime may interpret an internal representation
 and decide to JIT-compile some portions to native code.\footnote{
@@ -52,13 +52,28 @@ for example that a comparison consists of two expressions joined by an operator.
 	such as Extended Backus–Naur Form (EBNF),
 	which defines a formal syntax to specify a language's syntax rules.
 }
-The resulting syntax tree drops punctuation that carries no meaning by itself,
-such as parentheses and commas, and keeps only the nesting:
+The tree the parser produces is an abstract syntax tree (AST).\footnote{
+	Some parsers first build the concrete syntax tree, also called the parse tree,
+	which in contrast records every token and derivation step,
+	and is simplified into the AST in an additional step.
+	Many parsers skip this intermediate form and emit AST nodes directly.
+}
+Similarly to a token, each node has a kind, naming the represented construct,
+a payload and a source position.
+The payload stores its specifics,
+and the node's children are the sub-constructs it is composed of.
+For example, a binary operation node stores its operator
+and always has exactly two children as its operands.
+Leaves hold the parts that no longer decompose,
+typically identifiers and literals, whose payload is the data itself.
+The tree is abstract in that it drops what carries no meaning by itself,
+such as parentheses and commas, which only perform grouping.
+It keeps only the nesting structure:
 
 \begin{figure}[H]
 	\centering
 	\input{figures/comp_ast.tikz}
-	\caption{Syntax tree for \mono{total + 1 * 2}. The shape groups \mono{1 * 2} first, encoding that multiplication binds tighter than addition.}
+	\caption{Abstract syntax tree for \mono{total + 1 * 2}. The shape groups \mono{1 * 2} first, encoding that multiplication binds tighter than addition.}
 	\label{fig:ast}
 \end{figure}
 
